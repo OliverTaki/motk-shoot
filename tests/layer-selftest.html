@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MOTK Shoot layer self-test</title>
+<style>body{font:16px system-ui;background:#14171c;color:#d7dde6;padding:32px}button{padding:10px 16px}pre{white-space:pre-wrap}</style>
+<button id="run">Run video/pen/text layer self-test</button>
+<pre id="result">Ready.</pre>
+<script src="../js/util.js"></script>
+<script src="../js/db.js"></script>
+<script>
+window.K.project={current:{id:'__layer_selftest__',fps:12},saveSoon(){}};
+window.K.viewport={invalidate(){},currentExposure(){return 0}};
+</script>
+<script src="../js/layers.js"></script>
+<script>
+'use strict';
+async function videoBlob() {
+  const canvas=document.createElement('canvas'); canvas.width=64; canvas.height=48;
+  const ctx=canvas.getContext('2d'), stream=canvas.captureStream(8);
+  const type=MediaRecorder.isTypeSupported('video/webm;codecs=vp8')?'video/webm;codecs=vp8':'video/webm';
+  const recorder=new MediaRecorder(stream,{mimeType:type}), parts=[];
+  recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};
+  const done=new Promise(resolve=>recorder.onstop=resolve); recorder.start();
+  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#0f0':'#f40';ctx.fillRect(0,0,64,48);await new Promise(r=>setTimeout(r,70));}
+  recorder.stop(); await done; stream.getTracks().forEach(track=>track.stop()); return new Blob(parts,{type:'video/webm'});
+}
+document.querySelector('#run').addEventListener('click',async()=>{
+  const out=document.querySelector('#result');out.textContent='Running…';
+  try{
+    await K.db.open(); await K.layers.reset([]);
+    const blob=await videoBlob(); Object.defineProperty(blob,'name',{value:'reference.webm'}); await K.layers.addVideo(blob);
+    const video=K.layers.selected(); if(video.type!=='video'||!video.assetId||video.w<1)throw Error('video layer failed');
+    K.layers.addText(); K.layers.update({text:'note'}); K.layers.addPen(); K.layers.addPenPoint(10,12,true); K.layers.addPenPoint(22,30,false);
+    const serial=K.layers.serialize(); if(serial.length!==3||serial[1].text!=='note'||serial[2].points.length!==2)throw Error('pen/text serialization failed');
+    await K.db.del('assets',video.assetId); await K.layers.reset([]);
+    out.textContent='PASS\nVideo decoded; video, text, and pen layers serialized and cleaned up.';
+  }catch(error){out.textContent='FAIL\n'+error.stack}
+});
+</script>

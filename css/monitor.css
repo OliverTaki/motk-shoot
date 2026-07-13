@@ -1,0 +1,2 @@
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font:14px system-ui}#monitorCanvas{display:block;width:100%;height:100%;cursor:none}#monitorHint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:8px 12px;border-radius:6px;background:#000b;letter-spacing:.04em;transition:opacity 1s;pointer-events:none}#monitorHint.fade{opacity:0}
+

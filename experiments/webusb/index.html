@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MOTK Shoot — WebUSB/PTP experiment</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <a href="../../index.html" class="back">← MOTK Shoot</a>
+      <span class="tag">PHASE 1.6 · OPTIONAL EXPERIMENT</span>
+      <h1>WebUSB/PTP camera lab</h1>
+      <p>Try libgphoto2 in the browser without the camera agent. This lab is isolated from normal projects and never runs unless you open it.</p>
+    </header>
+
+    <section class="warning">
+      <strong>Do not use this for an irreplaceable take.</strong>
+      The upstream Web-gPhoto2 package is archived and camera/driver support varies. The regular tether agent remains the production path.
+    </section>
+
+    <section>
+      <h2>Environment</h2>
+      <div id="checks" class="checks"></div>
+      <p id="platformHelp" class="help"></p>
+      <p class="help">Required local server: <code>node bridge/serve-webusb-experiment.mjs</code></p>
+    </section>
+
+    <section>
+      <h2>Camera connection</h2>
+      <div class="actions">
+        <button id="btnConnect">Choose PTP camera…</button>
+        <button id="btnDisconnect" disabled>Disconnect</button>
+      </div>
+      <div id="status" class="status" role="status">Not connected</div>
+      <div id="cameraInfo" class="camera-info"></div>
+    </section>
+
+    <section>
+      <h2>Read-only diagnosis</h2>
+      <div class="actions">
+        <button id="btnOps" disabled>Read supported operations</button>
+        <button id="btnConfig" disabled>Read camera settings</button>
+        <button id="btnPreview" disabled>Capture preview</button>
+        <button id="btnCapture" disabled>Capture full image</button>
+      </div>
+      <img id="preview" class="preview hidden" alt="Camera preview">
+      <a id="download" class="download hidden">Save captured file</a>
+      <pre id="output">Connect a camera to begin.</pre>
+    </section>
+
+    <section class="notes">
+      <h2>Known boundaries</h2>
+      <ul>
+        <li>Chromium-based browser, HTTPS/localhost, and cross-origin isolation are required.</li>
+        <li>Windows normally needs the camera interface assigned to WinUSB (for example with Zadig); this can stop native camera software from seeing it until the driver is restored.</li>
+        <li>Only the separate lab server supplies the required COOP/COEP headers.</li>
+        <li>No WebUSB result is written into MOTK Shoot projects. The agent workflow is unchanged.</li>
+      </ul>
+    </section>
+  </main>
+  <script type="module" src="experiment.js"></script>
+</body>
+</html>

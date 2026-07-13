@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8">
+<title>MOTK Shoot camera coexistence self-test</title>
+<button id="run">Run Windows Hello camera coexistence self-test</button>
+<div id="result">Ready.</div>
+<script>
+'use strict';
+const messages = [];
+window.K = {
+  bus: { emit() {} },
+  tether: { stopLiveView: async () => {} },
+  viewport: { invalidate() {} },
+  toast(message) { messages.push(message); },
+  canvasToBlob: async () => new Blob(),
+};
+const devices = [
+  { kind: 'videoinput', label: 'ELECOM Face Authentication Cam', deviceId: 'face' },
+  { kind: 'videoinput', label: 'ELECOM 2MP Webcam', deviceId: 'rgb' },
+  { kind: 'audioinput', label: 'Microphone', deviceId: 'mic' },
+];
+Object.defineProperty(navigator, 'mediaDevices', {
+  configurable: true,
+  value: { enumerateDevices: async () => devices },
+});
+</script>
+<script src="../js/camera.js"></script>
+<script>
+const assert = (value, message) => { if (!value) throw new Error(message); };
+document.querySelector('#run').addEventListener('click', async () => {
+  const result = document.querySelector('#result');
+  try {
+    K.camera.init();
+    const listed = await K.camera.listDevices();
+    assert(listed.length === 1 && listed[0].deviceId === 'rgb', 'Face Authentication interface was not filtered');
+
+    let stopped = 0;
+    K.camera.source = 'media'; K.camera.running = true;
+    K.camera.stream = { getTracks: () => [{ stop: () => { stopped++; } }] };
+    K.camera._handleVisibility(true);
+    assert(stopped === 1 && !K.camera.running && K.camera._releasedForVisibility, 'Hidden page did not release the UVC stream');
+
+    K.camera._handleVisibility(false);
+    assert(messages.some((message) => message.includes('Windows Hello')), 'Resume guidance was not shown');
+    result.textContent = 'PASS Face Authentication was filtered and the RGB stream was released when hidden.';
+  } catch (error) { result.textContent = 'FAIL ' + error.message; }
+});
+</script>

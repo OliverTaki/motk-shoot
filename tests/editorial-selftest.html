@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MOTK Shoot editorial self-test</title>
+<style>body{font:16px system-ui;background:#14171c;color:#d7dde6;padding:32px}button{padding:10px 16px}pre{white-space:pre-wrap}</style>
+<button id="run">Run editorial hand-off self-test</button>
+<pre id="result">Ready.</pre>
+<script src="../js/util.js"></script>
+<script>
+'use strict';
+window.K.project={current:{id:'editorial_test',name:'Editorial Test',fps:12,productionId:'prod_test',shotId:'SC010_C020',take:2}};
+window.K.cine={settings:{desqueeze:1.33}};
+window.K.frames={
+  captures:[{id:'cap_a',raw:'A.DNG;A.JPG',note:'first'},{id:'cap_b',raw:'B.DNG',note:'second'}],
+  activeEditId:'edit_alt',
+  activeEdit(){return{name:'ALT',items:[{id:'cap_b',hold:2},{id:'cap_a',hold:3}]};},
+  size(){return{w:2048,h:1080};},
+};
+window.K.db={async get(){return{tracks:[{name:'guide.wav',offsetFrames:-6,volume:.5,muted:false},{name:'mute.wav',offsetFrames:0,volume:1,muted:true}]};}};
+</script>
+<script src="../js/editorial.js"></script>
+<script>
+'use strict';
+const assert=(condition,message)=>{if(!condition)throw new Error(message);};
+document.querySelector('#run').addEventListener('click',async()=>{
+  const out=document.querySelector('#result');out.textContent='Running…';
+  try{
+    const pack=await K.editorial.package(), model=pack.model;
+    assert(model.events.length===2&&model.totalFrames===5,'active edit timing mismatch');
+    assert(model.events[0].frameFile==='frames/frame_00002.jpg','edit order/capture mapping mismatch');
+    assert(pack.files['editorial.edl'].includes('00:00:00:02')&&pack.files['editorial.edl'].includes('B.DNG'),'EDL timing or RAW mapping missing');
+    const xml=new DOMParser().parseFromString(pack.files['editorial.fcpxml'],'application/xml');
+    assert(!xml.querySelector('parsererror')&&xml.querySelectorAll('asset-clip').length===2,'FCPXML is invalid');
+    const aaf=JSON.parse(pack.files['editorial_aaf_lite.json']);
+    assert(aaf.composition.editRate===12&&aaf.tracks[0].events[1].recordOut===5,'AAF-lite composition mismatch');
+    const concat=pack.files['conform_active_edit.ffconcat'];
+    assert(concat.indexOf('frame_00002.jpg')<concat.indexOf('frame_00001.jpg')&&concat.includes('duration 0.250000000'),'concat order or hold duration mismatch');
+    const recipe=pack.files['conform_recipe.txt'];
+    assert(recipe.includes('prores_ks')&&recipe.includes('dnxhr_hq')&&recipe.includes('atrim=start=0.500000'),'conform recipe mismatch');
+    assert(Object.keys(pack.files).length===6,'package file count mismatch');
+    out.textContent='PASS\nEDL, FCPXML, AAF-lite, manifest, concat list, and ProRes/DNxHR recipes preserve active-edit order, holds, audio offsets, RAW mapping, and desqueeze.';
+  }catch(error){out.textContent='FAIL\n'+error.stack;}
+});
+</script>

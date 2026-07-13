@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MOTK Shoot shortcuts self-test</title>
+<style>body{font:16px system-ui;background:#14171c;color:#d7dde6;padding:32px}button{padding:10px 16px}pre{white-space:pre-wrap}</style>
+<button id="run">Run shortcuts and HID self-test</button>
+<div id="shortcutList"></div><div id="hidStatus"></div>
+<pre id="result">Ready.</pre>
+<script src="../js/util.js"></script>
+<script>
+'use strict';
+const calls={capture:0,play:0,pop:[]};
+K.toast=()=>{};
+K.ui={capture(){calls.capture++},step(){},toggleLive(){},goFirst(){},goLast(){},deleteCurrent(){},toggleOnion(){},toggleLoop(){},cycleGrid(){},toggleMute(){},holdDelta(){},openProjectModal(){},showModal(){},hideModals(){}};
+K.playback={toggle(){calls.play++},play(){},stop(){},playing:false};
+K.viewport={mode:'live',reviewIdx:0,setPopThrough(on){calls.pop.push(on)}};
+K.frames={duplicate(){},undo(){},redo(){}};K.xsheet={toggle(){}};
+</script>
+<script src="../js/shortcuts.js"></script>
+<script>
+'use strict';
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+document.querySelector('#run').addEventListener('click',()=>{
+  const out=document.querySelector('#result');out.textContent='Running…';
+  try{
+    localStorage.removeItem(K.shortcuts.storageKey);K.shortcuts.bindings={};
+    const defaults=new Map();for(const [id,action] of Object.entries(K.shortcuts.actions))for(const key of action.defaults){assert(!defaults.has(key),`default collision: ${key}`);defaults.set(key,id)}
+    assert(K.shortcuts._keys('capture')[0]==='Enter','capture default missing');
+    assert(K.shortcuts._assignKeyboard('capture','KeyC'),'valid remap rejected');
+    assert(K.shortcuts._keys('capture')[0]==='KeyC','remap not applied');
+    assert(!K.shortcuts._assignKeyboard('play','KeyC'),'collision was accepted');
+    const event={code:'KeyC',key:'c',target:document.body,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false,repeat:false,preventDefault(){},stopPropagation(){}};
+    K.shortcuts._keydown(event);assert(calls.capture===1,'remapped keyboard action did not run');
+    K.shortcuts._learnHid='play';
+    const data=new DataView(Uint8Array.from([1,0,7]).buffer);
+    K.shortcuts._hidReport({device:{vendorId:10,productId:20},reportId:2,data});
+    assert(K.shortcuts.bindings.play.hid==='10:20:r2:010007','HID learning mismatch');
+    K.shortcuts._lastHid.at=0;K.shortcuts._hidReport({device:{vendorId:10,productId:20},reportId:2,data});
+    assert(calls.play===1,'learned HID action did not run');
+    K.shortcuts.reset();assert(K.shortcuts._keys('capture')[0]==='Enter','reset did not restore defaults');
+    out.textContent='PASS\nKeyboard remapping, collision rejection, persistence shape, default reset, HID learning, and HID action dispatch work.';
+  }catch(error){out.textContent='FAIL\n'+error.stack}
+});
+</script>

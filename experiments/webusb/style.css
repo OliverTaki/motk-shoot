@@ -1,0 +1,28 @@
+:root { color-scheme: dark; --bg:#14171c; --panel:#1d222a; --line:#343c49; --fg:#d7dde6; --dim:#98a3b2; --accent:#ff5f45; --ok:#3ecf8e; --warn:#ffc857; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.55 system-ui,"Segoe UI",sans-serif; }
+main { width:min(880px,calc(100% - 32px)); margin:32px auto 60px; }
+header { margin-bottom:22px; }
+h1 { margin:8px 0 4px; font-size:30px; }
+h2 { margin:0 0 12px; font-size:16px; }
+p { margin:6px 0; }
+.back { color:#8fc5ff; text-decoration:none; }
+.tag { display:inline-block; margin-left:12px; padding:2px 8px; border:1px solid #735d20; border-radius:999px; color:var(--warn); font:700 10px ui-monospace,monospace; letter-spacing:.08em; }
+section { margin:12px 0; padding:16px 18px; background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+.warning { border-color:#735d20; color:#ffe5a0; }
+.actions { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+button,.download { border:1px solid var(--line); border-radius:6px; background:#272e38; color:var(--fg); padding:7px 12px; cursor:pointer; font:inherit; }
+button:hover:not(:disabled),.download:hover { border-color:var(--accent); }
+button:disabled { opacity:.42; cursor:default; }
+.checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:7px; }
+.check { padding:7px 9px; border-radius:6px; background:#15191f; border-left:3px solid #a34c42; }
+.check.ok { border-left-color:var(--ok); }
+.help,.status { color:var(--dim); }
+code { color:#8fc5ff; user-select:text; }
+.camera-info { margin-top:8px; font-family:ui-monospace,monospace; font-size:12px; }
+pre { max-height:340px; overflow:auto; padding:12px; background:#0e1115; border-radius:7px; white-space:pre-wrap; word-break:break-word; user-select:text; }
+.preview { display:block; max-width:100%; max-height:420px; margin:12px 0; border-radius:7px; background:#000; }
+.download { display:inline-block; margin:8px 0; color:#fff; text-decoration:none; border-color:#347e63; }
+.hidden { display:none !important; }
+.notes li { margin:5px 0; color:var(--dim); }
+@media (max-width:560px) { main{width:min(100% - 18px,880px);margin-top:16px} .tag{display:block;width:max-content;margin:10px 0 0} }

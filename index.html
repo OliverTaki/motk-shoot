@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOTK Shoot — Stop Motion Studio</title>
+<meta name="description" content="Free, browser-based stop motion animation capture. Live view, onion skin, x-sheet, audio sync, export. Works with any camera on any OS.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191d24'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ff5f45' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3.4' fill='%23ff5f45'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ======= HEADER ======= -->
+  <header id="topbar">
+    <div class="brand" id="brand" title="MOTK Shoot — free stop motion studio">
+      <svg viewBox="0 0 32 32" width="20" height="20"><circle cx="16" cy="16" r="11" fill="none" stroke="#ff5f45" stroke-width="3.5"/><circle cx="16" cy="16" r="4" fill="#ff5f45"/></svg>
+      <span>MOTK Shoot</span>
+    </div>
+    <button id="btnProject" class="tb-btn" title="Projects (Ctrl+O)">📁 <span id="projectName">Untitled</span></button>
+    <div class="tb-group">
+      <label>Edit</label>
+      <select id="selEdit" title="Active edit — captures are never destroyed; each edit is a separate cut"></select>
+      <button id="btnAltEdit" class="tb-btn" title="Duplicate the current edit as an alternative cut">+ALT</button>
+      <button id="btnAsShot" class="tb-btn" title="Reset current edit to the filmed take; test shots stay in the bin">⟲ as-shot</button>
+    </div>
+    <div class="tb-group">
+      <label>FPS</label>
+      <input id="inFps" type="number" min="1" max="60" step="1" value="12" title="Project frame rate">
+    </div>
+    <div class="tb-group">
+      <span id="frameCounter" class="mono" title="frame / total exposures">0 / 0</span>
+      <span id="timecode" class="mono dim" title="timecode">00:00:00.00</span>
+    </div>
+    <div class="spacer"></div>
+    <button id="btnMonitor" class="tb-btn" title="Open a clean second-display video assist window">MONITOR</button>
+    <button id="btnXsheet" class="tb-btn" title="X-Sheet (X)">X-Sheet</button>
+    <button id="btnHelp" class="tb-btn" title="Keyboard shortcuts (?)">?</button>
+  </header>
+
+  <!-- ======= CENTER: viewport + sidebar ======= -->
+  <div id="center">
+    <div id="viewportWrap">
+      <canvas id="viewport"></canvas>
+      <canvas id="histogramCanvas" class="hidden" width="192" height="82" aria-label="Live histogram"></canvas>
+      <div id="noCamera" class="overlay-msg hidden">
+        <div class="big">🎥</div>
+        <div>No camera running</div>
+        <button id="btnStartCam" class="btn accent">Start camera</button>
+        <div class="dim small" style="max-width:340px;text-align:center;line-height:1.6">
+          Webcam / HDMI-USB capture: choose it in the <b>CAM</b> panel, then Start.<br>
+          DSLR / mirrorless (SIGMA fp): set the body's USB mode to <b>webcam / UVC</b>
+          to use it here directly, or <b>Camera Control</b> + run the tether agent for RAW
+          (see <code>docs/TETHER.md</code>).<br>
+          …or drop image files here to import frames.
+        </div>
+      </div>
+      <div id="vpBadges">
+        <span id="badgeMode" class="badge live">LIVE</span>
+        <span id="badgeRes" class="badge dim"></span>
+        <span id="badgeZoom" class="badge dim hidden"></span>
+      </div>
+      <div id="captureFlash"></div>
+    </div>
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside id="sidebar">
+      <nav id="sideTabs">
+        <button data-tab="camera" class="active" title="Camera">CAM</button>
+        <button data-tab="onion" title="Onion skin">ONION</button>
+        <button data-tab="layers" title="Overlay layers: reference images, primitives, masks, keyframes">LAYER</button>
+        <button data-tab="guides" title="Guides & masks">GUIDE</button>
+        <button data-tab="cine" title="Cinematography monitor tools">CINE</button>
+        <button data-tab="audio" title="Audio">AUDIO</button>
+        <button data-tab="review" title="Playback and take review">REVIEW</button>
+        <button data-tab="production" title="Production shots and takes">PROD</button>
+        <button data-tab="export" title="Export">EXPORT</button>
+        <button data-tab="link" title="External link (WebSocket bridge)">LINK</button>
+      </nav>
+
+      <div class="tabpanes">
+        <!-- CAMERA -->
+        <section data-pane="camera" class="pane active">
+          <h3>Source</h3>
+          <label class="row"><span>Camera</span>
+            <select id="selCamera"></select></label>
+          <label class="row"><span>Resolution</span>
+            <select id="selRes">
+              <option value="3840x2160">4K (2160p)</option>
+              <option value="2560x1440">QHD (1440p)</option>
+              <option value="1920x1080" selected>Full HD (1080p)</option>
+              <option value="1280x720">HD (720p)</option>
+              <option value="640x480">VGA (480p)</option>
+            </select></label>
+          <div class="btnrow">
+            <button id="btnCamRestart" class="btn">Restart</button>
+            <button id="btnCamStop" class="btn">Stop</button>
+          </div>
+          <label class="row chk"><input type="checkbox" id="chkPhotoMode">
+            <span>Hi-res photo capture <em class="dim">(if camera supports)</em></span></label>
+          <label class="row chk"><input type="checkbox" id="chkBlackout" checked>
+            <span>Blackout screen during capture <em class="dim">(kills monitor spill light)</em></span></label>
+          <label class="row"><span>JPEG quality</span>
+            <input type="range" id="inJpegQ" min="0.7" max="1" step="0.01" value="0.92">
+            <output id="outJpegQ">0.92</output></label>
+
+          <h3>Image</h3>
+          <label class="row chk"><input type="checkbox" id="chkMirrorH"><span>Mirror horizontal</span></label>
+          <label class="row chk"><input type="checkbox" id="chkMirrorV"><span>Mirror vertical</span></label>
+          <label class="row chk"><input type="checkbox" id="chkRot180"><span>Rotate 180°</span></label>
+
+          <h3>Controls <em class="dim small">(camera-dependent)</em></h3>
+          <div id="camControls"><div class="dim small">Start a camera to see available controls.</div></div>
+          <div class="btnrow"><button id="btnCamAuto" class="btn">Reset to auto</button></div>
+
+          <h3>Time-lapse</h3>
+          <label class="row"><span>Interval (s)</span>
+            <input type="number" id="inLapse" min="0.5" step="0.5" value="5" style="width:70px"></label>
+          <label class="row chk"><input type="checkbox" id="chkLapseRamp"><span>Ramp a camera setting</span></label>
+          <div id="lapseRampControls" class="subpanel hidden">
+            <label class="row"><span>Setting</span><select id="selLapseRampPath"></select></label>
+            <label class="row"><span>End value</span><select id="selLapseRampEnd"></select></label>
+            <label class="row"><span>Over shots</span><input type="number" id="inLapseRampShots" min="2" max="9999" value="24" style="width:70px"></label>
+          </div>
+          <div class="btnrow"><button id="btnLapse" class="btn">Start time-lapse</button></div>
+
+          <h3>Tether — RAW originals</h3>
+          <div class="dim small">Fires the camera's <em>own</em> shutter on every capture (real shutter speed / ISO / RAW from the camera body) and keeps the originals on disk. Run the agent next to your camera: <code>node bridge/production-agent.mjs</code> — see <code>docs/TETHER.md</code>.</div>
+          <label class="row"><span>Agent URL</span>
+            <input type="text" id="inTetherUrl" value="ws://localhost:8793" spellcheck="false"></label>
+          <label class="row"><span>Pairing key</span>
+            <input type="password" id="inTetherToken" autocomplete="off" spellcheck="false" placeholder="Shown once when Companion starts"></label>
+          <div class="dim small">The key stays only in this browser tab. It is not saved in the project or Agent URL.</div>
+          <div class="btnrow">
+            <button id="btnTether" class="btn">Connect</button>
+            <button id="btnForgetTetherToken" class="btn" type="button">Forget key</button>
+            <span id="tetherStatus" class="badge dim">offline</span>
+          </div>
+          <label class="row chk"><input type="checkbox" id="chkTetherTrigger" checked><span>Fire camera shutter on capture</span></label>
+          <label class="row chk"><input type="checkbox" id="chkTetherJpeg" checked><span>Use camera JPEG as frame image</span></label>
+          <div id="tetherInfo" class="dim small"></div>
+          <div id="tetherConfigs"><div class="dim small">Connect to see camera settings.</div></div>
+          <h3>Exposure passes</h3>
+          <label class="row chk"><input type="checkbox" id="chkTetherPasses"><span>Capture all enabled passes per frame</span></label>
+          <div class="btnrow"><button id="btnAddPass" class="btn">+ Pass</button><button id="btnBracket" class="btn">3-shot bracket</button></div>
+          <div id="tetherPassPresets" class="pass-presets"><div class="dim small">Add a pass, then choose only the settings it should override.</div></div>
+          <h3>Focus drive</h3>
+          <div id="tetherFocus"><div class="dim small">Connect to a camera exposing manualfocusdrive.</div></div>
+          <h3>Browser USB experiment</h3>
+          <div class="dim small">Optional Phase 1.6 lab. It is isolated from projects and does not replace the tether agent.</div>
+          <div class="btnrow"><a class="btn" href="experiments/webusb/" target="_blank" rel="noopener">Open WebUSB lab</a></div>
+        </section>
+
+        <!-- ONION -->
+        <section data-pane="onion" class="pane">
+          <h3>Onion skin</h3>
+          <label class="row chk"><input type="checkbox" id="chkOnion" checked><span>Enabled <kbd>O</kbd></span></label>
+          <label class="row"><span>Frames back</span>
+            <input type="range" id="inOnionN" min="1" max="5" step="1" value="1"><output id="outOnionN">1</output></label>
+          <label class="row"><span>Opacity</span>
+            <input type="range" id="inOnionA" min="0" max="1" step="0.01" value="0.35"><output id="outOnionA">0.35</output></label>
+          <label class="row"><span>Mode</span>
+            <select id="selOnionMode">
+              <option value="normal" selected>Blend</option>
+              <option value="difference">Difference</option>
+            </select></label>
+          <label class="row chk"><input type="checkbox" id="chkOnionNext"><span>Also show next frame (review)</span></label>
+          <label class="row"><span>Ghost X / Y</span><input type="number" id="inOnionX" step="1" value="0" style="width:65px"><input type="number" id="inOnionY" step="1" value="0" style="width:65px"></label>
+          <div class="btnrow"><button id="btnOnionReset" class="btn">Reset registration</button></div>
+          <div class="dim small">Onion skin ghosts previously captured frames over the live view so you can judge your next pose.</div>
+        </section>
+
+        <!-- LAYERS -->
+        <section data-pane="layers" class="pane">
+          <h3>Layers <em class="dim small">(overlay guides — never exported)</em></h3>
+          <div class="btnrow">
+            <button id="btnLayerImg" class="btn">+ Image…</button>
+            <button id="btnLayerVideo" class="btn">+ Video…</button>
+            <button id="btnLayerRect" class="btn">+ Rect</button>
+            <button id="btnLayerEllipse" class="btn">+ Ellipse</button>
+          </div>
+          <div class="btnrow">
+            <button id="btnLayerCross" class="btn">+ Cross</button>
+            <button id="btnLayerMask" class="btn">+ Mask</button>
+            <button id="btnLayerPen" class="btn">+ Pen</button>
+            <button id="btnLayerText" class="btn">+ Text</button>
+          </div>
+          <div id="layerList"><div class="dim small">No layers yet. Add a reference image, a primitive shape, or a garbage mask.</div></div>
+
+          <div id="layerProps" class="hidden">
+            <h3>Selected layer</h3>
+            <label class="row"><span>Name</span><input type="text" id="lpName"></label>
+            <label class="row"><span>Opacity</span>
+              <input type="range" id="lpOpacity" min="0" max="1" step="0.01" value="1"><output id="lpOpacityOut">1</output></label>
+            <div class="btnrow">
+              <button id="lpHalf" class="btn" title="Quick 50% opacity">½ Half</button>
+              <button id="lpFull" class="btn">100%</button>
+              <button id="lpBehind" class="btn" title="Draw under the captured image instead of over it">Behind</button>
+            </div>
+            <label class="row"><span>X / Y</span>
+              <input type="number" id="lpX" step="1" style="width:70px">
+              <input type="number" id="lpY" step="1" style="width:70px"></label>
+            <label class="row"><span>Scale %</span>
+              <input type="number" id="lpScale" step="1" min="1" value="100" style="width:70px">
+              <span class="dim small">Rot°</span>
+              <input type="number" id="lpRot" step="1" value="0" style="width:60px"></label>
+            <label class="row" id="lpSizeRow"><span>W / H</span>
+              <input type="number" id="lpW" step="1" style="width:70px">
+              <input type="number" id="lpH" step="1" style="width:70px"></label>
+            <label class="stack hidden" id="lpTextRow"><span>Text</span><textarea id="lpText" rows="2"></textarea></label>
+            <label class="row hidden" id="lpFontRow"><span>Font size</span><input type="number" id="lpFontSize" min="6" max="500" value="72"></label>
+            <label class="row hidden" id="lpVideoRow"><span>Video offset</span><input type="number" id="lpVideoOffset" step="1" value="0"><span class="dim small">frames</span></label>
+            <div class="row" id="lpColorRow"><span>Color</span>
+              <input type="color" id="lpColor" value="#4da3ff">
+              <label class="row chk" style="margin:0"><input type="checkbox" id="lpFill"><span>Fill</span></label></div>
+            <label class="row chk" id="lpInvertRow"><input type="checkbox" id="lpInvert"><span>Mask outside (cover all but the shape)</span></label>
+            <div class="dim small">Drag the layer directly in the viewport while this tab is open.</div>
+
+            <h3>Keyframes <em class="dim small">(animate over exposures)</em></h3>
+            <div class="btnrow">
+              <button id="lpKeySet" class="btn accent">◆ Key @ current koma</button>
+              <button id="lpKeyClear" class="btn">Clear all</button>
+            </div>
+            <div id="lpKeyList" class="dim small"></div>
+
+            <div class="btnrow"><button id="lpDelete" class="btn danger">Delete layer</button></div>
+          </div>
+        </section>
+
+        <!-- GUIDES -->
+        <section data-pane="guides" class="pane">
+          <h3>Guides</h3>
+          <label class="row"><span>Grid</span>
+            <select id="selGrid">
+              <option value="off" selected>Off</option>
+              <option value="thirds">Rule of thirds</option>
+              <option value="quarters">Quarters</option>
+              <option value="golden">Golden ratio</option>
+            </select></label>
+          <label class="row chk"><input type="checkbox" id="chkCross"><span>Center cross</span></label>
+          <label class="row chk"><input type="checkbox" id="chkSafe"><span>Safe areas (90 / 80%)</span></label>
+          <h3>Aspect mask</h3>
+          <label class="row"><span>Target</span>
+            <select id="selMask">
+              <option value="off" selected>Off</option>
+              <option value="2.39">2.39 : 1 (Scope)</option>
+              <option value="2">2 : 1</option>
+              <option value="1.85">1.85 : 1 (Flat)</option>
+              <option value="1.7778">16 : 9</option>
+              <option value="1.3333">4 : 3</option>
+              <option value="1">1 : 1</option>
+              <option value="0.5625">9 : 16 (Vertical)</option>
+            </select></label>
+          <label class="row"><span>Mask opacity</span>
+            <input type="range" id="inMaskA" min="0.2" max="1" step="0.05" value="0.7"><output id="outMaskA">0.7</output></label>
+          <div class="dim small">Zoom the live view with the mouse wheel, drag to pan, double-click to reset. <kbd>G</kbd> cycles grids.</div>
+        </section>
+
+        <!-- CINEMATOGRAPHY -->
+        <section data-pane="cine" class="pane">
+          <h3>Exposure monitor</h3>
+          <label class="row chk"><input type="checkbox" id="chkHistogram"><span>Histogram</span></label>
+          <label class="row chk"><input type="checkbox" id="chkZebra"><span>Clipping zebra</span></label>
+          <label class="row"><span>Clip level</span><input type="range" id="inClipLevel" min="180" max="255" value="245"><output id="outClipLevel">245</output></label>
+          <h3>Focus</h3>
+          <label class="row chk"><input type="checkbox" id="chkPeaking"><span>Focus peaking</span></label>
+          <label class="row"><span>Threshold</span><input type="range" id="inPeakThreshold" min="10" max="160" value="55"><output id="outPeakThreshold">55</output></label>
+          <h3>Chroma key monitor</h3>
+          <label class="row chk"><input type="checkbox" id="chkChroma"><span>Enable key</span></label>
+          <label class="row"><span>Key color</span><input type="color" id="inChromaColor" value="#00ff00"></label>
+          <label class="row"><span>Tolerance</span><input type="range" id="inChromaTolerance" min="5" max="220" value="85"><output id="outChromaTolerance">85</output></label>
+          <h3>Anamorphic monitor</h3>
+          <label class="row"><span>Desqueeze</span><select id="selDesqueeze"><option value="1">Off / 1.0x</option><option value="1.33">1.33x</option><option value="1.5">1.5x</option><option value="1.8">1.8x</option><option value="2">2.0x</option></select></label>
+          <div class="dim small">Monitor-only tools. Captures and RAW originals remain untouched. Desqueeze metadata is included in project backups.</div>
+        </section>
+
+        <!-- AUDIO -->
+        <section data-pane="audio" class="pane">
+          <h3>Audio tracks</h3>
+          <div class="btnrow">
+            <button id="btnAudioLoad" class="btn">+ Track…</button>
+            <button id="btnAudioClear" class="btn danger hidden">Remove selected</button>
+          </div>
+          <div id="audioTrackList" class="audio-track-list"><div class="dim small">No tracks.</div></div>
+          <div id="audioInfo" class="dim small">No audio loaded. Load a WAV/MP3 to animate to sound (lip sync).</div>
+          <label class="row"><span>Offset (frames)</span>
+            <input type="number" id="inAudioOffset" step="1" value="0" style="width:80px"></label>
+          <label class="row chk"><input type="checkbox" id="chkAudioPlay" checked><span>Play during playback <kbd>M</kbd></span></label>
+          <label class="row chk"><input type="checkbox" id="chkScrub" checked><span>Audio scrub on frame step</span></label>
+          <label class="row chk"><input type="checkbox" id="chkTrackMute"><span>Mute selected track</span></label>
+          <label class="row"><span>Volume</span>
+            <input type="range" id="inVolume" min="0" max="1" step="0.01" value="1"></label>
+          <div class="dim small">Use the X-Sheet to write phonemes/dialogue per frame while scrubbing.</div>
+          <h3>Face set</h3>
+          <label class="row chk"><input type="checkbox" id="chkFaces"><span>Show mouth cue from X-Sheet</span></label>
+          <div class="btnrow"><button id="btnFaceLoad" class="btn">Load face images…</button><button id="btnFaceGeneric" class="btn">Use generic chart</button></div>
+          <div id="faceInfo" class="dim small">Generic A/E/I/O/U/MBP/FV/L/WQ/rest mouth chart.</div>
+          <label class="row"><span>X / Y</span><input type="number" id="inFaceX" value="0" style="width:65px"><input type="number" id="inFaceY" value="220" style="width:65px"></label>
+          <label class="row"><span>Scale %</span><input type="number" id="inFaceScale" min="10" max="500" value="100" style="width:70px"></label>
+        </section>
+
+        <!-- REVIEW -->
+        <section data-pane="review" class="pane">
+          <h3>Playback</h3>
+          <label class="row"><span>Speed</span><select id="selPlaybackSpeed"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option></select></label>
+          <div class="btnrow"><button id="btnSetIn" class="btn">Set IN</button><button id="btnSetOut" class="btn">Set OUT</button><button id="btnClearRange" class="btn">Clear range</button></div>
+          <div id="reviewRangeInfo" class="dim small">Full sequence</div>
+          <h3>Pop-through</h3>
+          <div class="dim small">Hold <kbd>P</kbd> to momentarily flip live ↔ selected frame. Release to return.</div>
+          <h3>Compare</h3>
+          <label class="row"><span>Source B</span><select id="selCompareTarget"></select></label>
+          <label class="row"><span>Mode</span><select id="selCompareMode"><option value="off">Off</option><option value="split">Split A/B</option><option value="ab">Full-frame A/B</option></select></label>
+          <div class="btnrow"><button id="btnCompareAB" class="btn">Show B</button></div>
+          <div id="compareInfo" class="dim small">Compare another edit or another take from this production shot.</div>
+        </section>
+
+        <!-- PRODUCTION -->
+        <section data-pane="production" class="pane production-pane">
+          <h3>Production</h3>
+          <label class="row"><span>Production</span><select id="selProduction"></select></label>
+          <div class="btnrow"><button id="btnNewProduction" class="btn">+ Production</button><span id="prodCurrentTake" class="badge dim">No take linked</span></div>
+          <div id="productionSettings" class="subpanel">
+            <label class="row"><span>Name</span><input id="inProductionName" type="text"></label>
+            <label class="row"><span>Naming</span><input id="inProductionPattern" type="text" value="{scene}_{shot}_T{take:2}"></label>
+            <label class="row"><span>Folder root</span><input id="inProductionRoot" type="text" placeholder="Agent --production-root"></label>
+            <label class="row"><span>CSV URL</span><input id="inProductionCsv" type="text" placeholder="Published Google Sheet CSV URL"></label>
+            <label class="row"><span>GAS URL</span><input id="inProductionGas" type="password" placeholder="MOTK Apps Script URL including token"></label>
+            <label class="row"><span>Auto report</span><input id="inAutoReport" type="number" min="1" max="1440" value="5" style="width:65px"><span class="dim small">min</span></label>
+            <div class="btnrow"><button id="btnSaveProduction" class="btn">Save setup</button></div>
+          </div>
+
+          <h3>Sheet sync</h3>
+          <div class="btnrow">
+            <button id="btnPullCsv" class="btn">Pull published CSV</button>
+            <button id="btnPullGas" class="btn">Live sync</button>
+            <button id="btnProdReport" class="btn">Report CSV</button>
+          </div>
+          <div id="prodSyncInfo" class="dim small">No production selected.</div>
+
+          <h3>Add shot</h3>
+          <div class="shot-add">
+            <input id="inNewShotId" type="text" placeholder="Shot ID (C020)">
+            <input id="inNewScene" type="text" placeholder="Scene (SC010)">
+            <input id="inNewShotName" type="text" placeholder="Shot name">
+            <input id="inNewPlanned" type="number" min="0" placeholder="Frames">
+            <input id="inNewShotFps" type="number" min="1" max="60" value="12" placeholder="FPS">
+            <button id="btnAddShot" class="btn accent">Add shot</button>
+          </div>
+
+          <h3>Shots</h3>
+          <div id="productionShotList" class="shot-list"><div class="dim small">No shots yet.</div></div>
+
+          <div id="shotEditor" class="hidden">
+            <h3>Selected shot</h3>
+            <div id="shotEditorTitle" class="mono"></div>
+            <label class="row"><span>Status</span><select id="selShotStatus"><option>planned</option><option>ready</option><option>shooting</option><option>review</option><option>approved</option><option>hold</option></select></label>
+            <label class="row"><span>Frames</span><input id="editPlanned" type="number" min="0"><span class="dim small">FPS</span><input id="editShotFps" type="number" min="1" max="60"></label>
+            <label class="row"><span>Best take</span><input id="editBestTake" type="number" min="0"></label>
+            <label class="stack"><span>Notes</span><textarea id="editShotNotes" rows="3"></textarea></label>
+            <label class="stack"><span>Handover / 申し送り</span><textarea id="editShotHandover" rows="3"></textarea></label>
+            <div class="btnrow"><button id="btnSaveShot" class="btn">Save shot</button><button id="btnNewTake" class="btn accent">New take</button><button id="btnEndSession" class="btn">End session</button></div>
+          </div>
+        </section>
+
+        <!-- EXPORT -->
+        <section data-pane="export" class="pane">
+          <h3>Movie</h3>
+          <label class="row"><span>Format</span><select id="selVidMime"></select></label>
+          <label class="row"><span>Bitrate</span>
+            <select id="selVidBr">
+              <option value="8000000">8 Mbps</option>
+              <option value="16000000" selected>16 Mbps</option>
+              <option value="32000000">32 Mbps</option>
+              <option value="50000000">50 Mbps</option>
+            </select></label>
+          <label class="row chk"><input type="checkbox" id="chkVidAudio" checked><span>Include audio</span></label>
+          <div class="btnrow"><button id="btnExportVideo" class="btn accent">Export movie</button></div>
+          <div id="exportProg" class="dim small"></div>
+
+          <h3>Image sequence</h3>
+          <label class="row chk"><input type="checkbox" id="chkSeqHolds" checked><span>Expand holds (duplicate files)</span></label>
+          <div class="btnrow"><button id="btnExportSeq" class="btn">Export ZIP (JPEG sequence)</button></div>
+
+          <h3>Project</h3>
+          <div class="btnrow">
+            <button id="btnExportProj" class="btn">Backup project (.zip)</button>
+            <button id="btnImportProj" class="btn">Import…</button>
+          </div>
+          <div class="btnrow">
+            <button id="btnExportCsv" class="btn" title="Frame → capture → RAW file mapping for conforming in post">Edit list (CSV)</button>
+          </div>
+
+          <h3>Editorial hand-off</h3>
+          <p class="dim small">Active edit timing, holds, capture IDs, RAW references, and monitor desqueeze. FCPXML media is relinked to this take's <code>frames/</code> folder.</p>
+          <div class="btnrow">
+            <button id="btnExportEdl" class="btn">EDL</button>
+            <button id="btnExportFcpxml" class="btn">FCPXML</button>
+            <button id="btnExportAaf" class="btn">AAF-lite</button>
+          </div>
+          <div class="btnrow">
+            <button id="btnExportRecipe" class="btn">ffmpeg recipe</button>
+            <button id="btnWriteEditorial" class="btn accent" title="Requires an open production take and connected production agent">Write package to take</button>
+          </div>
+          <div id="editorialInfo" class="dim small">Uses the active edit. Binary AAF is represented by portable AAF-lite JSON.</div>
+
+          <h3>Edit sequence</h3>
+          <div class="btnrow">
+            <button id="btnImportImgs" class="btn">Import images as frames…</button>
+          </div>
+          <div class="btnrow">
+            <button id="btnReverse" class="btn">Reverse order</button>
+            <button id="btnPingPong" class="btn">Append reversed copy</button>
+          </div>
+        </section>
+
+        <!-- LINK -->
+        <section data-pane="link" class="pane">
+          <h3>External bridge</h3>
+          <div class="dim small">MOTK Shoot has no built-in DMX / motion control — instead it broadcasts every event over a WebSocket so external rigs (lighting, motors, triggers) can sync with capture. See <code>docs/BRIDGE_PROTOCOL.md</code>.</div>
+          <label class="row"><span>URL</span>
+            <input type="text" id="inBridgeUrl" value="ws://localhost:8790" spellcheck="false"></label>
+          <div class="btnrow">
+            <button id="btnBridge" class="btn">Connect</button>
+            <span id="bridgeStatus" class="badge dim">offline</span>
+          </div>
+          <label class="row chk"><input type="checkbox" id="chkBridgeAuto"><span>Reconnect automatically</span></label>
+          <h3>Log</h3>
+          <pre id="bridgeLog" class="log"></pre>
+          <div class="dim small">Scripts on the page can also use <code>window.motkshoot</code> (JS API) — every event is mirrored there.</div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ======= TRANSPORT ======= -->
+  <div id="transport">
+    <button id="btnFirst" class="t-btn" title="First frame (Home)">⏮</button>
+    <button id="btnStepBack" class="t-btn" title="Step back (1 / ←)">◀︎</button>
+    <button id="btnPlay" class="t-btn wide" title="Play / stop (Space)">▶</button>
+    <button id="btnStepFwd" class="t-btn" title="Step forward (2 / →)">▶︎</button>
+    <button id="btnLast" class="t-btn" title="Last frame (End)">⏭</button>
+    <span class="t-sep"></span>
+    <button id="btnLive" class="t-btn" title="Toggle live view (3)">LIVE</button>
+    <button id="btnLoop" class="t-btn" title="Loop playback (L)">LOOP</button>
+    <button id="btnShort" class="t-btn" title="Short play — last 1.5 seconds (4)">SHORT</button>
+    <span class="t-sep"></span>
+    <button id="btnCapture" title="Capture frame (Enter)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9.2"/>
+        <path d="M12 2.8 L15.5 9 M21.2 12 L14.2 12.4 M16.6 19.4 L13 13.6 M7.4 19.4 L11.4 13.4 M2.8 12 L9.8 11 M7.4 4.6 L11 10.4"/>
+      </svg>
+    </button>
+    <button id="btnTestCapture" class="t-btn test-capture" title="Test shot — save to captures bin without changing the edit">TEST</button>
+    <span class="t-sep"></span>
+    <label class="t-mini" title="Exposures (hold) applied to each new capture">×<input id="inCaptureHold" type="number" min="1" max="12" value="1"></label>
+    <button id="btnDelete" class="t-btn" title="Remove from edit — capture is kept in the bin (Del)">🗑</button>
+    <span class="t-sep"></span>
+    <button id="btnUndo" class="t-btn" title="Undo edit change (Ctrl+Z)">↩</button>
+    <button id="btnRedo" class="t-btn" title="Redo (Ctrl+Shift+Z)">↪</button>
+    <button id="btnBin" class="t-btn" title="Captures bin — every shot ever taken, restore any of them">🗂</button>
+    <div class="spacer"></div>
+    <span id="statusMsg" class="dim small"></span>
+  </div>
+
+  <!-- ======= WAVEFORM ======= -->
+  <canvas id="waveform" class="hidden"></canvas>
+
+  <!-- ======= TIMELINE ======= -->
+  <div id="timeline" tabindex="0">
+    <div id="tlInner">
+      <div id="tlRuler"></div>
+      <div id="reel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= MODALS ======= -->
+<div id="modalBack" class="hidden">
+  <div id="projectModal" class="modal hidden">
+    <h2>Projects</h2>
+    <div class="btnrow">
+      <button id="btnNewProject" class="btn accent">New project</button>
+    </div>
+    <div id="projectList"></div>
+  </div>
+
+  <div id="xsheetModal" class="modal wide hidden">
+    <h2>X-Sheet <span class="dim small">— click a row to jump; type dialogue / phonemes per frame</span></h2>
+    <div class="btnrow xsheet-actions"><button id="btnPrintXsheet" class="btn">Print / Save PDF</button></div>
+    <div id="xsheetWrap"><table id="xsheetTable"></table></div>
+  </div>
+
+  <div id="binModal" class="modal wide hidden">
+    <h2>Captures bin <span class="dim small">— every shot, as taken. Click one to insert it into the current edit.</span></h2>
+    <div class="btnrow">
+      <button id="btnPurge" class="btn danger">Delete captures unused by any edit…</button>
+    </div>
+    <div id="binGrid"></div>
+  </div>
+
+  <div id="helpModal" class="modal hidden">
+    <h2>Keyboard shortcuts</h2>
+    <table class="keys">
+      <tr><td><kbd>Enter</kbd></td><td>Capture frame</td><td><kbd>Space</kbd></td><td>Play / stop</td></tr>
+      <tr><td><kbd>1</kbd> / <kbd>←</kbd></td><td>Step back</td><td><kbd>2</kbd> / <kbd>→</kbd></td><td>Step forward</td></tr>
+      <tr><td><kbd>3</kbd></td><td>Toggle live view</td><td><kbd>4</kbd></td><td>Short play</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Onion skin on/off</td><td><kbd>L</kbd></td><td>Loop on/off</td></tr>
+      <tr><td><kbd>G</kbd></td><td>Cycle grid</td><td><kbd>M</kbd></td><td>Mute audio</td></tr>
+      <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>First / last frame</td><td><kbd>Del</kbd></td><td>Remove from edit (capture kept)</td></tr>
+      <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Hold +1 / −1 on selected frame</td><td><kbd>D</kbd></td><td>Duplicate frame</td></tr>
+      <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo edit change</td><td><kbd>Ctrl+Shift+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>Redo</td></tr>
+      <tr><td><kbd>X</kbd></td><td>X-Sheet</td><td><kbd>?</kbd></td><td>This help</td></tr>
+      <tr><td><kbd>P</kbd> hold</td><td>Pop-through live / selected frame</td><td><kbd>REVIEW</kbd></td><td>Speed, range, edit/take A/B</td></tr>
+    </table>
+    <div class="btnrow"><button id="btnShortcutSettings" class="btn accent">Configure shortcuts / keypad</button></div>
+    <div class="dim small">Mouse: wheel = zoom live view · drag = pan when zoomed · double-click = reset · drag thumbnails to reorder · <b>drag a thumbnail's right edge to stretch its hold</b> · right-click a thumbnail for more. Edits are non-destructive: captures always stay in the 🗂 bin, and “⟲ as-shot” rebuilds the take exactly as filmed.</div>
+  </div>
+
+  <div id="shortcutModal" class="modal wide hidden">
+    <h2>Shortcuts &amp; WebHID keypad</h2>
+    <p class="dim small">Keyboard mappings are stored in this browser. Choose a key button, then press the replacement. WebHID is optional and only reads input reports; MOTK Shoot never writes to the device.</p>
+    <div class="btnrow"><button id="btnShortcutBack" class="btn">Back</button><button id="btnShortcutReset" class="btn">Restore defaults</button><button id="btnHidConnect" class="btn accent">Connect WebHID keypad…</button></div>
+    <div id="hidStatus" class="dim small"></div>
+    <div id="shortcutList"></div>
+  </div>
+</div>
+
+<div id="ctxMenu" class="hidden"></div>
+<div id="blackout" class="hidden"></div>
+<div id="toasts"></div>
+
+<input type="file" id="fileAudio" accept="audio/*" multiple class="hidden">
+<input type="file" id="fileFaces" accept="image/*" multiple class="hidden">
+<input type="file" id="fileImages" accept="image/*" multiple class="hidden">
+<input type="file" id="fileProject" accept=".zip" class="hidden">
+<input type="file" id="fileLayerImg" accept="image/*" class="hidden">
+<input type="file" id="fileLayerVideo" accept="video/*" class="hidden">
+
+<script src="js/util.js"></script>
+<script src="js/db.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/frames.js"></script>
+<script src="js/viewport.js"></script>
+<script src="js/layers.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/playback.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/xsheet.js"></script>
+<script src="js/export.js"></script>
+<script src="js/editorial.js"></script>
+<script src="js/project.js"></script>
+<script src="js/production.js"></script>
+<script src="js/cinematography.js"></script>
+<script src="js/faces.js"></script>
+<script src="js/review.js"></script>
+<script src="js/tether.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/ecosystem.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

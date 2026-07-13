@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MOTK Shoot Companion pairing self-test</title>
+<style>body{font:16px system-ui;background:#14171c;color:#d7dde6;padding:32px}button{padding:10px 16px}pre{white-space:pre-wrap}</style>
+<button id="run">Run Companion pairing self-test</button>
+<input id="inTetherToken" type="password"><button id="btnTether">Connect</button>
+<span id="tetherStatus"></span><span id="tetherInfo"></span><div id="tetherConfigs"></div><div id="tetherPassPresets"></div><div id="tetherFocus"></div>
+<pre id="result">Ready.</pre>
+<script src="../js/util.js"></script>
+<script>
+'use strict';
+const opened=[];K.toast=()=>{};K.camera={tetherStopped(){}};
+class MockWebSocket{
+  static OPEN=1;
+  constructor(url){this.url=url;this.readyState=1;opened.push(url);setTimeout(()=>this.onmessage?.({data:JSON.stringify({type:'tether.hello',backend:'dummy',dir:'test-originals',auth:{required:true,claims:['shoot.capture']}})}),0)}
+  send(){} close(){this.readyState=3}
+}
+window.WebSocket=MockWebSocket;
+</script>
+<script src="../js/tether.js"></script>
+<script>
+'use strict';
+const assert=(value,message)=>{if(!value)throw new Error(message)};
+document.querySelector('#run').addEventListener('click',async()=>{
+  const out=document.querySelector('#result');out.textContent='Running…';
+  try{
+    sessionStorage.clear();
+    K.tether.setPairingToken('pairing-key-test-value');
+    assert(K.tether.restorePairingToken()==='pairing-key-test-value','tab-scoped key was not restored');
+    K.tether.connect('ws://localhost:8793');
+    await new Promise((done)=>setTimeout(done,20));
+    assert(opened.length===1,'WebSocket was not opened');
+    const endpoint=new URL(opened[0]);
+    assert(endpoint.searchParams.get('token')==='pairing-key-test-value','pairing key was not sent');
+    assert(K.tether.url==='ws://localhost:8793','saved Agent URL was contaminated by the key');
+    assert(K.tether.connected,'authenticated hello was not accepted');
+    assert(K.tether.claims.includes('shoot.capture'),'capability claims were not retained');
+    K.tether.disconnect();K.tether.setPairingToken('');
+    assert(!sessionStorage.getItem('motkshoot.companionPairingKey'),'forget did not clear tab storage');
+    out.textContent='PASS\nPairing key stayed tab-scoped, authenticated the connection, did not contaminate the Agent URL/project state, exposed claims, and was forgettable.';
+  }catch(error){out.textContent='FAIL\n'+error.stack}
+});
+</script>

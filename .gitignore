@@ -1,0 +1,9 @@
+.DS_Store
+*.log
+originals/
+productions/
+tmp/
+config/
+state/
+CameraControlSDK*/
+CameraControlSDK*.zip

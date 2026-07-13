@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MOTK Shoot audio self-test</title>
+<style>body{font:16px system-ui;background:#14171c;color:#d7dde6;padding:32px}button{padding:10px 16px}pre{white-space:pre-wrap}</style>
+<button id="run">Run multi-track audio self-test</button>
+<pre id="result">Ready.</pre>
+<script src="../js/util.js"></script>
+<script src="../js/db.js"></script>
+<script>window.K.project={current:{id:'__audio_selftest__',audioName:''},saveSoon(){}};</script>
+<script src="../js/audio.js"></script>
+<script>
+'use strict';
+function wav(frequency) {
+  const rate = 8000, samples = 800, bytes = 44 + samples * 2;
+  const buffer = new ArrayBuffer(bytes), view = new DataView(buffer);
+  const text = (at, value) => [...value].forEach((char, index) => view.setUint8(at + index, char.charCodeAt(0)));
+  text(0,'RIFF'); view.setUint32(4,bytes-8,true); text(8,'WAVE'); text(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true); view.setUint32(24,rate,true); view.setUint32(28,rate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true); text(36,'data'); view.setUint32(40,samples*2,true);
+  for(let i=0;i<samples;i++) view.setInt16(44+i*2,Math.sin(i/rate*frequency*Math.PI*2)*12000,true);
+  return new Blob([buffer],{type:'audio/wav'});
+}
+document.querySelector('#run').addEventListener('click', async () => {
+  const out = document.querySelector('#result'); out.textContent = 'Running…';
+  try {
+    await K.db.open(); await K.db.del('audio','__audio_selftest__').catch(()=>{});
+    // The generated clip is 0.1 s long. At 12 fps, -1 frame still overlaps
+    // project time zero; -2 frames would correctly finish before the export.
+    const a = await K.audio.load(wav(220),'guide.wav',{offsetFrames:-1,volume:.7});
+    const b = await K.audio.load(wav(440),'dialogue.wav',{offsetFrames:4,volume:.4,muted:true});
+    if(K.audio.tracks.length!==2||a.offsetFrames!==-1||!b.muted) throw new Error('runtime track state mismatch');
+    K.audio.clear(false); await K.audio.restore('__audio_selftest__');
+    if(K.audio.tracks.length!==2||K.audio.tracks[1].offsetFrames!==4||K.audio.tracks[0].volume!==.7) throw new Error('persistent track state mismatch');
+    const dest=K.audio.ctx.createMediaStreamDestination(), nodes=K.audio.connectExport(dest,12,K.audio.ctx.currentTime+.05); nodes.forEach(node=>{try{node.stop()}catch{}});
+    if(nodes.length!==1) throw new Error('mute-aware export mix mismatch');
+    await K.db.del('audio','__audio_selftest__'); K.audio.clear(false);
+    out.textContent='PASS\n2 tracks decoded, persisted, restored, mixed, and cleaned up.';
+  } catch(error) { out.textContent='FAIL\n'+error.stack; }
+});
+</script>
