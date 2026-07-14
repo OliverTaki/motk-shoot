@@ -255,6 +255,10 @@ sheet.
     a read-only preview client. The zero-dependency agent can serve allowlisted
     app assets and relay capped previews while rejecting all non-loopback
     capture, camera, folder, and publish commands.
+7.4 Deferred: a small authenticated remote-shutter screen for a second phone
+    or tablet. Do not add capture controls to the read-only Observer or expand
+    the current release until the command boundary and on-set failure behavior
+    have a dedicated design and test plan.
 
 ---
 

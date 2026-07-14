@@ -1,7 +1,7 @@
 {
   "name": "MOTK Shoot — Stop Motion Studio",
   "short_name": "MOTK Shoot",
-  "description": "Free, browser-based stop motion animation capture.",
+  "description": "Free stop-motion capture for phones, tablets and desktops.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#14171c",

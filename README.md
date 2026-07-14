@@ -2,9 +2,10 @@
 
 MOTK Shoot is a **free, browser-based stop motion animation capture tool** —
 a lightweight alternative to Dragonframe for anyone who doesn't need motion
-control rigs. The static browser app runs on **any modern desktop OS** (Windows /
-macOS / Linux / ChromeOS) with UVC cameras the OS exposes, needs no app installer,
-and stores projects locally. Optional RAW tethering uses the bundled Node agent.
+control rigs. It runs on **phones, tablets and desktop computers** with no app
+installer. A touch-first shooting layout appears automatically on narrow phone
+screens, while the full desktop workspace stays unchanged. Projects are stored
+locally in the browser. Optional RAW tethering uses the bundled Node agent.
 
 Part of the free stop motion tool set at **https://stopmotiondatabase.com/tools**.
 
