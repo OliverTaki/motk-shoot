@@ -41,7 +41,7 @@
         <div>No camera running</div>
         <button id="btnStartCam" class="btn accent">Start camera</button>
         <div class="dim small" style="max-width:340px;text-align:center;line-height:1.6">
-          Webcam / HDMI-USB capture: choose it in the <b>CAM</b> panel, then Start.<br>
+          Webcam / HDMI-USB capture: choose it in <b>Settings → Camera</b>, then Start.<br>
           DSLR / mirrorless (SIGMA fp): set the body's USB mode to <b>webcam / UVC</b>
           to use it here directly, or <b>Camera Control</b> + run the tether agent for RAW
           (see <code>docs/TETHER.md</code>).<br>
@@ -564,10 +564,10 @@
       <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Hold +1 / −1 on selected frame</td><td><kbd>D</kbd></td><td>Duplicate frame</td></tr>
       <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo edit change</td><td><kbd>Ctrl+Shift+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>Redo</td></tr>
       <tr><td><kbd>X</kbd></td><td>X-Sheet</td><td><kbd>?</kbd></td><td>This help</td></tr>
-      <tr><td><kbd>P</kbd> hold</td><td>Pop-through live / selected frame</td><td><kbd>REVIEW</kbd></td><td>Speed, range, edit/take A/B</td></tr>
+      <tr><td><kbd>P</kbd> hold</td><td>Pop-through live / selected frame</td><td><kbd>Focus</kbd></td><td>Full-screen shooting; controls can be hidden</td></tr>
     </table>
     <div class="btnrow"><button id="btnShortcutSettings" class="btn accent">Configure shortcuts / keypad</button></div>
-    <div class="dim small">Mouse: wheel = zoom live view · drag = pan when zoomed · double-click = reset · drag thumbnails to reorder · <b>drag a thumbnail's right edge to stretch its hold</b> · right-click a thumbnail for more. Edits are non-destructive: captures always stay in the 🗂 bin, and “⟲ as-shot” rebuilds the take exactly as filmed.</div>
+    <div class="dim small">Mouse: wheel = zoom live view · drag = pan when zoomed · double-click = reset · drag thumbnails to reorder · <b>drag a thumbnail's right edge to stretch its hold</b> · right-click a thumbnail for more. Captures stay in the bin even when removed from the visible take.</div>
   </div>
 
   <div id="shortcutModal" class="modal wide hidden">

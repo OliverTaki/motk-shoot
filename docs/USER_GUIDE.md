@@ -222,7 +222,7 @@ can learn the workflow before touching hardware.
 
 ### 4.6 Connect and shoot in the app
 
-In **CAM → Tether — RAW originals**, leave the URL at `ws://localhost:8793` and
+In **Settings → Camera → Tether — RAW originals**, leave the URL at `ws://localhost:8793` and
 press **Connect**. When it reads **connected**, the camera's live settings
 appear:
 
@@ -251,7 +251,7 @@ modified.
 ### 4.7 PTP live view (no HDMI dongle)
 
 With the SIGMA, gphoto2, or dummy backend connected, choose **Tether live view (PTP)**
-in **CAM → Source**. The agent streams the camera's preview JPEGs (up to ~15 fps)
+in **Settings → Camera → Source**. The agent streams the camera's preview JPEGs (up to ~15 fps)
 straight into the viewport — onion skin, guides, and capture all work on it, so
 you may not need the HDMI dongle at all. Camera support and speed vary by model;
 the fp SDK preview is hardware-confirmed, and UVC/HDMI remains the faster fallback.
