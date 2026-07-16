@@ -24,20 +24,24 @@ Shoot workflow.
 ## Information architecture
 
 1. **Shoot** is always the primary surface: live image, timeline and a small
-   transport with Capture, Test, Live, step, playback and hold.
+   transport. Desktop keeps all immediate controls visible. Phones keep
+   Capture, Live, Play/Pause and stepping visible, with secondary operations in
+   a labelled modal that works in portrait and landscape.
 2. **Assist** opens only when needed and contains shooting aids: onion skin,
    guides, reference layers, monitor tools and audio/X-Sheet cues.
 3. **Session** shows imported production context, the active shot/take, notes,
    results and safe session export. It does not create a production plan.
 4. **Settings** contains camera source, resolution, tether/Companion pairing,
    time-lapse, passes, image orientation and external bridge setup.
-5. **Focus mode** makes the viewport the product. Minimal capture controls can
-   be shown or hidden. On browsers without the Fullscreen API, including some
+5. **Focus mode** makes the viewport the product. Capture and Play/Pause are the
+   primary controls; the HUD can be hidden. On browsers without the Fullscreen API, including some
    iPhone Safari contexts, the same mode fills the available browser viewport.
 
 ## Local media
 
 - Browser storage remains the canonical recovery copy for every capture.
+- A new browser session starts with a blank shoot. Existing projects are only
+  shown after an explicit Open action; same-tab reload remains recoverable.
 - Chrome/Edge and compatible browsers may grant one project-scoped directory
   handle. MOTK Shoot mirrors new JPEG captures into a project folder without
   overwriting an existing file.

@@ -4,7 +4,7 @@
  *  frames:   {id, projectId, blob, thumb(dataURL), w, h, shotHold, note, raw, passes, isTest, capturedAt}
  *  audio:    {projectId, blob, name}
  *  assets:   {id, projectId, blob}            (layer images)
- *  meta:     {key, value}                     (lastProjectId etc.)
+ *  meta:     {key, value}                     (device and app preferences)
  */
 'use strict';
 K.db = {

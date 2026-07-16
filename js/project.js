@@ -2,6 +2,23 @@
 'use strict';
 K.project = {
   current: null,
+  SESSION_KEY: 'motkShootActiveProjectId',
+
+  _sessionId() {
+    try { return sessionStorage.getItem(this.SESSION_KEY) || ''; }
+    catch { return ''; }
+  },
+
+  _rememberForThisTab(id) {
+    try { sessionStorage.setItem(this.SESSION_KEY, id); }
+    catch {}
+  },
+
+  _freshSessionName() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `Shoot ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}-${pad(d.getMinutes())}`;
+  },
 
   _defaultSettings() {
     return {
@@ -20,14 +37,15 @@ K.project = {
   },
 
   async init() {
-    const lastId = await K.db.getMeta('lastProjectId');
-    if (lastId) {
-      const p = await K.db.get('projects', lastId);
+    // A reload in this tab resumes the active shoot. A new browser tab/session
+    // starts clean: older captures stay stored but are never shown until the
+    // operator explicitly opens their project.
+    const sessionId = this._sessionId();
+    if (sessionId) {
+      const p = await K.db.get('projects', sessionId);
       if (p) { await this.open(p.id); return; }
     }
-    const all = await K.db.getAll('projects');
-    if (all.length) { await this.open(all.sort((a, b) => b.updatedAt - a.updatedAt)[0].id); return; }
-    await this.create('Untitled');
+    await this.create(this._freshSessionName(), { freshSession: true });
   },
 
   async create(name, tags = {}) {
@@ -44,11 +62,12 @@ K.project = {
       productionId: tags.productionId || '',
       shotId: tags.shotId || '',
       take: Math.max(0, parseInt(tags.take, 10) || 0),
+      freshSession: tags.freshSession === true,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
     await K.db.put('projects', p);
-    await K.db.setMeta('lastProjectId', p.id);
+    this._rememberForThisTab(p.id);
     this.current = p;
     K.frames.reset({ captures: [], edits: p.edits, activeEditId: p.activeEditId });
     await K.layers.reset([]);
@@ -63,7 +82,7 @@ K.project = {
     if (!p) { K.toast('Project not found', 'err'); return; }
     if (!p.settings) p.settings = this._defaultSettings();
     this.current = p;
-    await K.db.setMeta('lastProjectId', id);
+    this._rememberForThisTab(id);
 
     // captures bin: every stored frame, chronological (= "as shot")
     const recs = await K.db.framesOfProject(id);
@@ -126,9 +145,7 @@ K.project = {
   async remove(id) {
     await K.db.deleteProjectData(id);
     if (this.current && this.current.id === id) {
-      const all = await K.db.getAll('projects');
-      if (all.length) await this.open(all.sort((a, b) => b.updatedAt - a.updatedAt)[0].id);
-      else await this.create('Untitled');
+      await this.create(this._freshSessionName(), { freshSession: true });
     }
   },
 

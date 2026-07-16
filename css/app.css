@@ -202,10 +202,8 @@ body[data-panel-group="settings"] #sideTabs button[data-group="settings"] { disp
   display: flex; align-items: center; gap: 6px;
   background: var(--bg2); border-top: 1px solid var(--line); padding: 0 10px;
 }
-.transport-secondary { display: none; }
-body.transport-expanded .transport-secondary { display: inline-flex; }
-#btnTransportMore { letter-spacing: .1em; }
-body.transport-expanded #btnTransportMore { border-color: var(--accent2); color: var(--accent2); }
+.transport-secondary { display: inline-flex; }
+#btnTransportMore { display: none; letter-spacing: .1em; }
 .t-btn {
   background: var(--bg3); border: 1px solid var(--line); border-radius: 6px;
   min-width: 34px; height: 30px; cursor: pointer; color: var(--fg); font-size: 12px;
@@ -351,17 +349,37 @@ body.transport-expanded #btnTransportMore { border-color: var(--accent2); color:
 }
 .modal.wide { max-width: 760px; }
 .modal h2 { font-size: 15px; margin-bottom: 12px; }
+.modal-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.modal-title-row h2 { margin: 1px 0 0; font-size: 19px; }
+.modal-eyebrow { color: var(--accent); font: 800 9px/1.2 ui-monospace, monospace; letter-spacing: .14em; }
+.modal-close { width: 38px; height: 38px; flex: none; border: 1px solid var(--line); border-radius: 9px; background: var(--bg3); color: var(--fg); font-size: 23px; cursor: pointer; }
+.session-safety { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid #66541e; border-radius: 8px; background: rgba(255,200,87,.07); }
+.session-safety strong { color: var(--warn); }
+.session-safety span { color: var(--dim); font-size: 11px; line-height: 1.5; }
+.shooting-controls-modal { max-width: 620px; }
+.more-group { margin-top: 17px; }
+.more-group h3 { margin-bottom: 7px; color: var(--dim); font: 800 10px/1.2 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.more-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.more-action, .more-field { min-height: 66px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg3); color: var(--fg); text-align: left; }
+.more-action { cursor: pointer; }
+.more-action:hover { border-color: var(--accent2); }
+.more-action.on { border-color: var(--accent); color: var(--accent); }
+.more-action span, .more-field span { color: var(--dim); font-size: 10px; }
+.more-field { display: grid; grid-template-columns: 1fr auto; }
+.more-field span { grid-column: 1; }
+.more-field input { grid-column: 2; grid-row: 1 / span 2; width: 62px; min-height: 40px; }
 .keys { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
 .keys td { padding: 5px 10px 5px 0; font-size: 12px; }
 #projectList { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .proj-item {
   display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-  background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
+  background: var(--bg3); border: 1px solid var(--line); border-radius: 8px;
 }
 .proj-item:hover { border-color: var(--accent2); }
 .proj-item .pi-name { font-weight: 600; }
 .proj-item .pi-meta { color: var(--dim); font-size: 11px; }
-.proj-item button { margin-left: auto; }
+.proj-item > div { min-width: 0; flex: 1; }
+.proj-item .project-open { margin-left: auto; white-space: nowrap; }
 .proj-item .icon-btn {
   background: none; border: none; cursor: pointer; color: var(--dim); font-size: 13px; padding: 2px 6px;
 }
@@ -523,6 +541,7 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
   }
   #transport > * { flex: none; }
+  #transport .transport-secondary { display: none !important; }
   #transport .spacer, #statusMsg { display: none; }
   #transport .t-btn { min-width: 44px; height: 44px; }
   #transport .t-sep { height: 30px; }
@@ -531,9 +550,12 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
     border-color: var(--warn); box-shadow: 0 0 0 2px rgba(255,200,87,.12), inset 0 1px 0 rgba(255,200,87,.22);
   }
   #btnCapture::after { content: "CAPTURE"; font: 800 11px/1 ui-monospace, monospace; letter-spacing: .08em; }
-  #btnTestCapture { order: -29; }
-  #btnLive { order: -28; }
-  #btnTransportMore { order: -27; }
+  #btnTestCapture, #transport .t-mini { display: none; }
+  #btnLive { order: -29; }
+  #btnPlay { order: -28; }
+  #btnStepBack { order: -27; }
+  #btnStepFwd { order: -26; }
+  #btnTransportMore { display: inline-flex; align-items: center; justify-content: center; order: -25; }
   #timeline { width: 100%; min-width: 0; max-width: 100vw; min-height: 0; }
   #tlRuler { height: 14px; }
   #reel { height: 76px; padding: 5px 0; }
@@ -545,6 +567,48 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
   .focus-btn { min-width: 48px; min-height: 50px; padding: 0 10px; font-size: 11px; }
   .focus-btn.capture { min-width: 112px; min-height: 62px; }
   #btnFocusHide { min-width: 60px; }
+}
+
+/* Short, wide phone screens need a dedicated shooting strip. The timeline is
+   still available in portrait; landscape gives the camera and shutter priority. */
+@media (max-height: 540px) and (orientation: landscape) and (max-width: 1000px) {
+  body { overscroll-behavior: none; }
+  #app {
+    width: 100%; min-width: 0; height: 100dvh; overflow: hidden;
+    grid-template-rows: 38px minmax(0, 1fr) 56px;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #topbar { min-width: 0; gap: 4px; overflow: hidden; padding: 0 6px; }
+  #topbar .brand, #btnHelp, #timecode, #btnAssist, #btnSession { display: none; }
+  #topbar > * { flex: none; }
+  #topbar .tb-btn { min-height: 32px; padding: 3px 7px; }
+  .project-button { min-width: 0; max-width: 156px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .shoot-progress { margin-left: auto; }
+  #center, body.panel-open #center { min-width: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+  #sidebar { position: fixed; inset: 38px 0 56px auto; z-index: 24; width: min(390px, 52vw); border: 0; border-left: 1px solid var(--line); }
+  #transport { min-width: 0; min-height: 56px; gap: 7px; overflow-x: auto; padding: 5px 9px; scrollbar-width: none; }
+  #transport::-webkit-scrollbar { display: none; }
+  #transport > * { flex: none; }
+  #transport .transport-secondary, #btnTestCapture, #transport .t-mini, #transport .spacer, #statusMsg { display: none !important; }
+  #transport .t-btn { min-width: 44px; height: 44px; }
+  #btnCapture { order: -30; width: 124px; height: 46px; gap: 7px; }
+  #btnCapture::after { content: "CAPTURE"; font: 800 11px/1 ui-monospace, monospace; letter-spacing: .08em; }
+  #btnLive { order: -29; }
+  #btnPlay { order: -28; }
+  #btnStepBack { order: -27; }
+  #btnStepFwd { order: -26; }
+  #btnTransportMore { display: inline-flex; align-items: center; justify-content: center; order: -25; }
+  #waveform, #timeline { display: none !important; }
+  #toasts { bottom: calc(62px + env(safe-area-inset-bottom)); }
+  .modal { width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 20px); padding: 13px 15px; }
+  .shooting-controls-modal { max-width: 680px; }
+  .more-group { margin-top: 10px; }
+  .more-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .more-group:nth-of-type(2) .more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .more-action, .more-field { min-height: 56px; padding: 7px 9px; }
+  #focusControls { gap: 7px; }
+  .focus-btn { min-height: 46px; padding: 0 10px; }
+  .focus-btn.capture { min-width: 132px; min-height: 54px; }
 }
 
 @media print {

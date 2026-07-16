@@ -9,7 +9,7 @@ const [html, css, ui, localFolder, production, sw, design] = await Promise.all([
 ]);
 
 for (const group of ['assist', 'session', 'settings']) assert.match(html, new RegExp(`data-group="${group}"`));
-for (const id of ['btnAssist', 'btnSession', 'btnSettings', 'btnFocus', 'btnFocusHide', 'btnFocusExit']) {
+for (const id of ['btnAssist', 'btnSession', 'btnSettings', 'btnFocus', 'btnFocusPlay', 'btnFocusHide', 'btnFocusExit', 'shootingControlsModal']) {
   assert.match(html, new RegExp(`id="${id}"`));
 }
 assert.match(css, /body\.focus-mode #viewportWrap/);
@@ -17,6 +17,8 @@ assert.match(css, /body\.focus-controls-hidden #focusHud/);
 assert.match(ui, /openPanel\('assist', 'onion'\)/);
 assert.match(ui, /openPanel\('session', 'session'\)/);
 assert.match(ui, /openPanel\('settings', 'camera'\)/);
+assert.match(ui, /showModal\('shootingControlsModal'\)/);
+assert.doesNotMatch(ui, /transport-expanded/);
 
 const sessionMarkup = html.slice(html.indexOf('data-pane="session"'), html.indexOf('<!-- REVIEW -->'));
 assert.match(sessionMarkup, /Import CSV \/ JSON/);

@@ -21,8 +21,8 @@ MOTK Shoot is deliberately centred on the work done beside the set:
 - record shooting notes, handover notes, and a session result;
 - keep browser recovery storage, mirror JPEGs to a chosen local folder on
   compatible desktop browsers, or share/save a session backup on iPhone/iPad;
-- use **Focus mode** for a clean full-screen camera view with only Live,
-  Capture, and Test controls—and hide even those controls with one tap.
+- use **Focus mode** for a clean full-screen camera view with Capture and
+  Play/Pause, then hide even those controls with one tap.
 
 It is not a production-planning or picture-editing application. MOTK, a
 spreadsheet, or another production tool prepares the shot context; MOTK Shoot
@@ -50,6 +50,12 @@ a time.
 
 Every capture first goes to project-scoped IndexedDB in the browser. This is the
 recovery copy and works on desktop and mobile.
+
+Opening MOTK Shoot in a new browser tab or a later browser session always starts
+with a new, empty shoot. Older captures never appear automatically: open
+**Projects** and choose **Open project** when you deliberately want them. A
+normal reload in the same tab resumes its active shoot so an accidental refresh
+does not lose your place.
 
 Under **Session → Save**:
 
@@ -79,6 +85,10 @@ the browser recovery copy remains.
   cues. See [Audio and lip sync](docs/AUDIO_LIPSYNC.md).
 - A tactile koma timeline, capture bin, immediate undo, short playback, loop,
   and keyboard/WebHID controls.
+- Desktop keeps the full transport visible. Phones keep Capture, Live,
+  Play/Pause, stepping, and **•••** within reach; **•••** opens a labelled modal
+  for test shots, exposure hold, loop, short play, undo/redo, and the captures
+  bin. Portrait and landscape shooting are both supported.
 - Video-assist output, Observer, WebSocket bridge, and scripting API. See
   [Ecosystem](docs/ECOSYSTEM.md) and [Bridge protocol](docs/BRIDGE_PROTOCOL.md).
 - Offline-ready installable PWA after the first load.

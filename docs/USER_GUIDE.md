@@ -63,15 +63,17 @@ network.
 - **Session** — receive a prepared shot list, choose a shot/take, record notes,
   choose a local mirror folder, and finish the session.
 - **Settings** — project FPS, camera, optional video assist, and local bridge.
-- **Focus** — a full-screen camera-room mode. It keeps only Live, Capture, and
-  Test visible; **Hide controls** clears the screen until the next tap.
-- **Transport bar** — immediate take controls. Less-used controls sit behind
-  **•••** instead of filling the shooting screen.
+- **Focus** — a full-screen camera-room mode. It keeps only Capture,
+  Play/Pause, Hide controls, and Exit visible; **Hide controls** clears the
+  screen until the next tap.
+- **Transport bar** — immediate take controls. Desktop keeps the full transport
+  visible. On a phone, Capture, Live, Play/Pause, and stepping remain visible;
+  less-used controls sit in the clearly labelled **•••** modal.
 - **Timeline** — one slot = one *koma* (exposure) at your frame rate.
 
 On a phone, the same functions are not replaced by a different product. The
 top bar becomes compact, panels open as a lower sheet, capture remains within
-thumb reach, and Focus mode uses the full display.
+thumb reach in both portrait and landscape, and Focus mode uses the full display.
 
 ![Phone shooting layout](images/12-phone-shooting.png)
 
@@ -284,13 +286,20 @@ Set the **× hold** box next to the shutter to shoot on twos/threes (each captur
 then occupies that many koma). Use **TEST** to shoot a throw‑away frame into the
 bin *without* adding it to your animation.
 
-For a clear camera-room view, press **Focus**. The full screen keeps only Live,
-Capture, Test, the active project, and exposure count. Press **Hide controls**
-to clear every button; tap the picture to restore them. **Exit** returns to the
-normal workspace. This is especially useful on iPhone or iPad, but the same
-mode is available on desktop.
+For a clear camera-room view, press **Focus**. The full screen keeps only
+**Capture**, **Play/Pause**, **Hide controls**, and **Exit**. Press **Hide
+controls** to clear every button; tap the picture to restore them. **Exit**
+returns to the normal workspace. This is especially useful on iPhone or iPad,
+including landscape shooting, but the same mode is available on desktop.
 
 ![Phone Focus mode](images/13-phone-focus-mode.png)
+
+On phones, press **•••** for the operations that do not need to occupy the
+shutter strip: First/Last frame, Loop, Short play, Test shot, Exposure hold,
+Remove frame, Undo/Redo, and Captures bin. The modal uses full labels instead of
+an unexplained row of icons.
+
+![Phone More controls modal](images/15-phone-more-controls.png)
 
 ---
 
@@ -378,8 +387,9 @@ face‑set layers for lip sync.
 
 ## 12. Playback and take check
 
-Press **Space** or **▶** to play at your project FPS. The additional transport
-controls behind **•••** include loop and short playback of the last 1.5 seconds.
+Press **Space** or **▶** to play at your project FPS. On desktop the full
+transport remains visible. On phones, **•••** opens the More controls modal,
+including loop and short playback of the last 1.5 seconds.
 Click a frame to check it, step to compare adjacent poses, and hold **P** to flip
 momentarily between the selected frame and live.
 
@@ -413,6 +423,11 @@ neutral CSV/JSON intake. Planning stays in MOTK or the owner's chosen system.
 
 Open **Session → Save**. Every capture already has a project-scoped recovery copy
 in browser storage.
+
+A new browser tab/session starts with an empty shoot. Previous images remain
+closed until you open **Projects → Open project**. Reloading the same tab resumes
+that tab's shoot, protecting against an accidental refresh without exposing an
+older take on the next launch.
 
 - On compatible desktop Chrome/Edge browsers, **Choose folder** mirrors each new
   JPEG to `<chosen folder>/<project>/frames`; TEST images go to `tests`.

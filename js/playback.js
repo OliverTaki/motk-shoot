@@ -43,13 +43,33 @@ K.playback = {
     this._short = short;
     this.playing = true;
     K.viewport.playing = true;
+
+    // Resolve the first image before starting the clock. IndexedDB-backed
+    // frames are asynchronous, and starting the timer first could advance
+    // past a frame before its bitmap ever reached the viewport.
+    const firstFrame = fs.list[this._expanded[start]];
+    if (firstFrame) {
+      try {
+        const firstBitmap = await fs.getBitmap(firstFrame.id);
+        if (!this.playing) return;
+        K.viewport.playExp = start;
+        K.viewport.playBitmap = firstBitmap;
+        K.viewport.invalidate();
+      } catch (error) {
+        this.playing = false;
+        K.viewport.playing = false;
+        K.toast(`Playback could not read the first frame: ${error.message}`, 'err');
+        return;
+      }
+    }
     this._t0 = performance.now();
-    this._lastDrawnExp = -1;
+    this._lastDrawnExp = start;
 
     // prefetch first frames
     this._prefetch(start);
     K.audio.startPlayback(start, fps, this.speed);
     K.bus.emit('playback:started', { start, total, short, speed: this.speed, inPoint: rangeStart, outPoint: rangeEnd });
+    K.bus.emit('playback:frame', { exposure: start, frame: this._expanded[start] });
     this._tick();
   },
 
@@ -117,7 +137,13 @@ K.playback = {
           K.viewport.playBitmap = cached;
           K.viewport.invalidate();
         } else {
-          K.frames.getBitmap(f.id); // warm it; frame will show next pass if still current
+          const requestedExp = exp;
+          K.frames.getBitmap(f.id).then((bitmap) => {
+            if (this.playing && K.viewport.playExp === requestedExp) {
+              K.viewport.playBitmap = bitmap;
+              K.viewport.invalidate();
+            }
+          }).catch((error) => K.toast(`Playback frame unavailable: ${error.message}`, 'err'));
         }
       }
       this._prefetch(exp + 1);

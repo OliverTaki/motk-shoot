@@ -517,12 +517,11 @@
 </div>
 
 <!-- ======= FOCUS MODE ======= -->
-<div id="focusHud" aria-label="Focus shooting controls">
+  <div id="focusHud" aria-label="Focus shooting controls">
   <div class="focus-readout"><span id="focusProject">Untitled</span><span id="focusCounter" class="mono">0 / 0</span></div>
   <div id="focusControls">
-    <button id="btnFocusLive" class="focus-btn">LIVE</button>
     <button id="btnFocusCapture" class="focus-btn capture">CAPTURE</button>
-    <button id="btnFocusTest" class="focus-btn">TEST</button>
+    <button id="btnFocusPlay" class="focus-btn" aria-pressed="false">PLAY</button>
     <button id="btnFocusHide" class="focus-btn">Hide controls</button>
     <button id="btnFocusExit" class="focus-btn">Exit</button>
   </div>
@@ -532,10 +531,46 @@
 <div id="modalBack" class="hidden">
   <div id="projectModal" class="modal hidden">
     <h2>Projects</h2>
+    <div class="session-safety">
+      <strong>Each browser session starts clean.</strong>
+      <span>Older shoots stay closed until you explicitly open one below. A reload in this tab safely resumes the current shoot.</span>
+    </div>
     <div class="btnrow">
       <button id="btnNewProject" class="btn accent">New project</button>
     </div>
     <div id="projectList"></div>
+  </div>
+
+  <div id="shootingControlsModal" class="modal shooting-controls-modal hidden">
+    <div class="modal-title-row">
+      <div><span class="modal-eyebrow">SHOOTING</span><h2>More controls</h2></div>
+      <button id="btnMoreClose" class="modal-close" type="button" aria-label="Close more controls">×</button>
+    </div>
+    <section class="more-group">
+      <h3>Playback</h3>
+      <div class="more-grid">
+        <button id="btnMoreFirst" class="more-action"><strong>First frame</strong><span>Go to the start</span></button>
+        <button id="btnMoreLast" class="more-action"><strong>Last frame</strong><span>Go to the end</span></button>
+        <button id="btnMoreLoop" class="more-action"><strong>Loop</strong><span>Repeat playback</span></button>
+        <button id="btnMoreShort" class="more-action"><strong>Short play</strong><span>Play the last 1.5 seconds</span></button>
+      </div>
+    </section>
+    <section class="more-group">
+      <h3>Capture</h3>
+      <div class="more-grid">
+        <button id="btnMoreTest" class="more-action"><strong>Test shot</strong><span>Keep it outside the active take</span></button>
+        <label class="more-field"><strong>Exposure hold</strong><span>Frames held per capture</span><input id="inMoreCaptureHold" type="number" min="1" max="12" value="1"></label>
+      </div>
+    </section>
+    <section class="more-group">
+      <h3>Take</h3>
+      <div class="more-grid compact">
+        <button id="btnMoreDelete" class="more-action"><strong>Remove frame</strong><span>Capture remains in the bin</span></button>
+        <button id="btnMoreUndo" class="more-action"><strong>Undo</strong><span>Undo last edit</span></button>
+        <button id="btnMoreRedo" class="more-action"><strong>Redo</strong><span>Redo last edit</span></button>
+        <button id="btnMoreBin" class="more-action"><strong>Captures bin</strong><span>Restore earlier shots</span></button>
+      </div>
+    </section>
   </div>
 
   <div id="xsheetModal" class="modal wide hidden">

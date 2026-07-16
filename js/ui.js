@@ -73,16 +73,15 @@ K.ui = {
     K.$('#btnSession').addEventListener('click', () => this.openPanel('session', 'session'));
     K.$('#btnSettings').addEventListener('click', () => this.openPanel('settings', 'camera'));
     K.$('#btnClosePanel').addEventListener('click', () => this.closePanel());
-    K.$('#btnTransportMore').addEventListener('click', (event) => {
-      const expanded = document.body.classList.toggle('transport-expanded');
-      event.currentTarget.setAttribute('aria-expanded', String(expanded));
+    K.$('#btnTransportMore').addEventListener('click', () => {
+      K.$('#inMoreCaptureHold').value = this.captureHold;
+      this.showModal('shootingControlsModal');
     });
     K.$('#btnFocus').addEventListener('click', () => this.enterFocus());
     K.$('#btnFocusExit').addEventListener('click', () => this.exitFocus());
     K.$('#btnFocusHide').addEventListener('click', () => document.body.classList.add('focus-controls-hidden'));
     K.$('#btnFocusCapture').addEventListener('click', () => this.capture());
-    K.$('#btnFocusTest').addEventListener('click', () => this.capture({ test: true }));
-    K.$('#btnFocusLive').addEventListener('click', () => this.toggleLive());
+    K.$('#btnFocusPlay').addEventListener('click', () => K.playback.toggle({ fromStart: K.viewport.mode === 'live' }));
     K.$('#viewportWrap').addEventListener('click', () => {
       if (document.body.classList.contains('focus-mode') && document.body.classList.contains('focus-controls-hidden')) {
         document.body.classList.remove('focus-controls-hidden');
@@ -485,6 +484,7 @@ K.ui = {
   toggleLoop() {
     K.playback.loop = !K.playback.loop;
     K.$('#btnLoop').classList.toggle('on', K.playback.loop);
+    K.$('#btnMoreLoop').classList.toggle('on', K.playback.loop);
     this.persistSettings();
   },
   toggleMute() {
@@ -530,6 +530,8 @@ K.ui = {
     }
     K.$('#btnLive').classList.toggle('on', K.viewport.mode === 'live' && !K.playback.playing);
     K.$('#btnPlay').textContent = K.playback.playing ? '■' : '▶';
+    K.$('#btnFocusPlay').textContent = K.playback.playing ? 'PAUSE' : 'PLAY';
+    K.$('#btnFocusPlay').setAttribute('aria-pressed', String(K.playback.playing));
     K.timeline.updateSelection();
     this.updateCounters();
   },
@@ -1325,6 +1327,15 @@ K.ui = {
           <div class="pi-name">${this._esc(p.name)}${p.id === K.project.current.id ? ' <span class="dim">(open)</span>' : ''}</div>
           <div class="pi-meta">${recs} frames · ${editCount} edit${editCount > 1 ? 's' : ''} · ${p.fps} fps · ${new Date(p.updatedAt).toLocaleString()}</div>
         </div>`;
+      const btnOpen = document.createElement('button');
+      btnOpen.className = 'btn project-open';
+      btnOpen.textContent = p.id === K.project.current.id ? 'Open' : 'Open project';
+      btnOpen.disabled = p.id === K.project.current.id;
+      btnOpen.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (p.id !== K.project.current.id) await K.project.open(p.id);
+        this.hideModals();
+      });
       const btnRen = document.createElement('button');
       btnRen.className = 'icon-btn'; btnRen.textContent = '✏️'; btnRen.title = 'Rename';
       btnRen.addEventListener('click', async (e) => {
@@ -1341,12 +1352,9 @@ K.ui = {
           this.openProjectModal();
         }
       });
+      item.appendChild(btnOpen);
       item.appendChild(btnRen);
       item.appendChild(btnDel);
-      item.addEventListener('click', async () => {
-        if (p.id !== K.project.current.id) await K.project.open(p.id);
-        this.hideModals();
-      });
       list.appendChild(item);
     }
     this.showModal('projectModal');
@@ -1361,6 +1369,28 @@ K.ui = {
       if (name === null) return;
       await K.project.create(name.trim() || 'Untitled');
       this.hideModals();
+    });
+    K.$('#btnMoreClose').addEventListener('click', () => this.hideModals());
+    const moreAction = (selector, action, { close = true } = {}) => {
+      K.$(selector).addEventListener('click', () => {
+        action();
+        if (close) this.hideModals();
+      });
+    };
+    moreAction('#btnMoreFirst', () => this.goFirst());
+    moreAction('#btnMoreLast', () => this.goLast());
+    moreAction('#btnMoreLoop', () => this.toggleLoop());
+    moreAction('#btnMoreShort', () => K.playback.play({ short: true }));
+    moreAction('#btnMoreTest', () => this.capture({ test: true }));
+    moreAction('#btnMoreDelete', () => this.deleteCurrent());
+    moreAction('#btnMoreUndo', () => K.frames.undo());
+    moreAction('#btnMoreRedo', () => K.frames.redo());
+    moreAction('#btnMoreBin', () => this.openBin(), { close: false });
+    K.$('#inMoreCaptureHold').addEventListener('change', (event) => {
+      this.captureHold = K.clamp(parseInt(event.target.value, 10) || 1, 1, 12);
+      event.target.value = this.captureHold;
+      K.$('#inCaptureHold').value = this.captureHold;
+      this.persistSettings();
     });
     K.$('#modalBack').addEventListener('click', (e) => {
       if (e.target.id === 'modalBack') this.hideModals();
@@ -1466,6 +1496,7 @@ K.ui = {
     K.$('#selMask').value = g.mask;
     K.$('#inMaskA').value = g.maskAlpha; K.$('#outMaskA').textContent = g.maskAlpha;
     K.$('#inCaptureHold').value = this.captureHold;
+    K.$('#inMoreCaptureHold').value = this.captureHold;
     K.$('#inJpegQ').value = K.camera.jpegQuality; K.$('#outJpegQ').textContent = K.camera.jpegQuality;
     K.$('#chkMirrorH').checked = K.camera.mirrorH;
     K.$('#chkMirrorV').checked = K.camera.mirrorV;
@@ -1485,6 +1516,7 @@ K.ui = {
     K.$('#inLapseRampShots').value = ramp.shots || 24;
     if (s.resPreset) K.$('#selRes').value = s.resPreset;
     K.$('#btnLoop').classList.toggle('on', K.playback.loop);
+    K.$('#btnMoreLoop').classList.toggle('on', K.playback.loop);
     K.$('#inAudioOffset').value = K.audio.offsetFrames;
     K.$('#chkAudioPlay').checked = K.audio.enabled;
     K.$('#chkScrub').checked = K.audio.scrub;
