@@ -82,6 +82,11 @@
         <section data-pane="project" class="pane">
           <h3>Project</h3>
           <label class="row"><span>Frame rate</span><input id="inFps" type="number" min="1" max="60" step="1" value="12" title="Project frame rate"><span class="dim small">fps</span></label>
+          <label class="stack"><span>When MOTK Shoot opens</span><select id="selProjectStartMode"><option value="new-session">Start a new shoot after the browser closes</option><option value="resume-last">Reopen the last project on this device</option></select></label>
+          <p class="dim small">Camera Stop/Restart and a normal reload never create another project. The default creates a new shoot only after this browser session is closed.</p>
+          <h3>Capture storage</h3>
+          <div id="projectStorageStatus" class="storage-card"><strong>This browser on this device</strong><span>Every capture is stored locally in browser storage.</span></div>
+          <div class="btnrow"><button id="btnProjectStorage" class="btn">Choose and explain storage…</button></div>
           <div class="btnrow"><button id="btnMonitor" class="btn" title="Open a clean second-display video assist window">Open video assist</button></div>
           <h3>Legacy edit compatibility</h3>
           <p class="dim small">Old projects with alternate edits remain readable. MOTK Shoot now keeps editorial work out of the normal shooting flow.</p>
@@ -482,6 +487,7 @@
     <button id="btnLast" class="t-btn transport-secondary" title="Last frame (End)">⏭</button>
     <span class="t-sep transport-secondary"></span>
     <button id="btnLive" class="t-btn" title="Toggle live view (3)">LIVE</button>
+    <button id="btnQuickCamera" class="t-btn" title="Choose phone camera">CAM</button>
     <button id="btnLoop" class="t-btn transport-secondary" title="Loop playback (L)">LOOP</button>
     <button id="btnShort" class="t-btn transport-secondary" title="Short play — last 1.5 seconds (4)">SHORT</button>
     <span class="t-sep transport-secondary"></span>
@@ -547,6 +553,13 @@
       <button id="btnMoreClose" class="modal-close" type="button" aria-label="Close more controls">×</button>
     </div>
     <section class="more-group">
+      <h3>Setup</h3>
+      <div class="more-grid">
+        <button id="btnMoreCamera" class="more-action"><strong>Camera</strong><span>Choose front, back, USB, or tether source</span></button>
+        <button id="btnMoreStorage" class="more-action"><strong>Capture storage</strong><span>See exactly where this project's images are kept</span></button>
+      </div>
+    </section>
+    <section class="more-group">
       <h3>Playback</h3>
       <div class="more-grid">
         <button id="btnMoreFirst" class="more-action"><strong>First frame</strong><span>Go to the start</span></button>
@@ -571,6 +584,32 @@
         <button id="btnMoreBin" class="more-action"><strong>Captures bin</strong><span>Restore earlier shots</span></button>
       </div>
     </section>
+  </div>
+
+  <div id="cameraQuickModal" class="modal quick-setup-modal hidden">
+    <div class="modal-title-row">
+      <div><span class="modal-eyebrow">CAMERA</span><h2>Choose camera</h2></div>
+      <button id="btnQuickCameraClose" class="modal-close" type="button" aria-label="Close camera selection">×</button>
+    </div>
+    <p class="dim small">On phones, camera names appear after permission is allowed. Back cameras usually include “back”, “rear”, or a lens name.</p>
+    <label class="stack"><span>Camera</span><select id="selQuickCamera"></select></label>
+    <label class="stack"><span>Resolution</span><select id="selQuickRes"><option value="3840x2160">4K (2160p)</option><option value="2560x1440">QHD (1440p)</option><option value="1920x1080" selected>Full HD (1080p)</option><option value="1280x720">HD (720p)</option><option value="640x480">VGA (480p)</option></select></label>
+    <div class="quick-state" id="quickCameraState">Camera is stopped.</div>
+    <div class="action-row"><button id="btnQuickCameraStart" class="btn accent">Start selected camera</button><button id="btnQuickCameraStop" class="btn">Stop camera</button></div>
+  </div>
+
+  <div id="storageChoiceModal" class="modal quick-setup-modal hidden">
+    <div class="modal-title-row">
+      <div><span class="modal-eyebrow">CAPTURE STORAGE</span><h2>Where this shoot is stored</h2></div>
+      <button id="btnStorageClose" class="modal-close" type="button" aria-label="Close storage settings">×</button>
+    </div>
+    <div id="storageChoiceStatus" class="storage-choice-status"></div>
+    <div class="storage-facts">
+      <div><strong>Primary recovery copy</strong><span>IndexedDB inside this browser profile on this device. It is local, but it is not a normal Files folder and browser-data deletion removes it.</span></div>
+      <div><strong>Folder mirror</strong><span>On compatible desktop browsers, choose a normal folder and every new JPEG is copied there without overwriting an existing file.</span></div>
+      <div><strong>iPhone / iPad</strong><span>Safari cannot continuously write to an arbitrary Files folder. Use Save / Share backup to put a ZIP in Files, iCloud Drive, or AirDrop.</span></div>
+    </div>
+    <div class="action-row"><button id="btnStorageChoose" class="btn accent">Choose mirror folder…</button><button id="btnStorageDisconnect" class="btn">Use browser only</button><button id="btnStorageShare" class="btn">Save / Share backup…</button></div>
   </div>
 
   <div id="xsheetModal" class="modal wide hidden">

@@ -13,13 +13,14 @@ K.playback = {
   _timer: 0,
   _lastDrawnExp: -1,
   _returnMode: 'live',
+  _runLoop: false,
 
   toggle(opts = {}) {
     if (this.playing) this.stop();
     else this.play(opts);
   },
 
-  async play({ short = false, fromStart = null } = {}) {
+  async play({ short = false, fromStart = null, loopOverride = null } = {}) {
     const fs = K.frames;
     if (fs.count() === 0) { K.toast('No frames to play'); return; }
     this._expanded = fs.expanded();
@@ -41,6 +42,7 @@ K.playback = {
     this._startExp = start;
     this._returnMode = K.viewport.mode;
     this._short = short;
+    this._runLoop = loopOverride === null ? this.loop : !!loopOverride;
     this.playing = true;
     K.viewport.playing = true;
 
@@ -112,7 +114,7 @@ K.playback = {
     const rangeEnd = this.outPoint === null ? total - 1 : K.clamp(this.outPoint, rangeStart, total - 1);
 
     if (exp > rangeEnd) {
-      if (this.loop && !this._short) {
+      if (this._runLoop && !this._short) {
         // wrap
         this._t0 = performance.now();
         this._startExp = rangeStart;

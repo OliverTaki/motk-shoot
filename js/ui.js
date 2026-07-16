@@ -39,12 +39,14 @@ K.ui = {
       K.$('#noCamera').classList.add('hidden');
       K.$('#badgeRes').textContent = `${settings.width}×${settings.height}`;
       this.buildCamControls();
+      this.renderQuickCameraState();
       this.updateModeUI();
     });
     K.bus.on('camera:stopped', () => {
       if (K.viewport.mode === 'live') K.$('#noCamera').classList.remove('hidden');
       K.$('#badgeRes').textContent = '';
       K.$('#camControls').innerHTML = '<div class="dim small">Start a camera to see available controls.</div>';
+      this.renderQuickCameraState();
       this.updateModeUI();
     });
     K.bus.on('audio:loaded', ({ name, duration }) => {
@@ -81,7 +83,8 @@ K.ui = {
     K.$('#btnFocusExit').addEventListener('click', () => this.exitFocus());
     K.$('#btnFocusHide').addEventListener('click', () => document.body.classList.add('focus-controls-hidden'));
     K.$('#btnFocusCapture').addEventListener('click', () => this.capture());
-    K.$('#btnFocusPlay').addEventListener('click', () => K.playback.toggle({ fromStart: K.viewport.mode === 'live' }));
+    K.$('#btnFocusPlay').addEventListener('click', () => K.playback.toggle({ fromStart: true, loopOverride: true }));
+    K.$('#btnQuickCamera').addEventListener('click', () => this.openQuickCamera());
     K.$('#viewportWrap').addEventListener('click', () => {
       if (document.body.classList.contains('focus-mode') && document.body.classList.contains('focus-controls-hidden')) {
         document.body.classList.remove('focus-controls-hidden');
@@ -234,6 +237,25 @@ K.ui = {
     K.$('#btnChooseLocalFolder').textContent = state.permission === 'prompt' ? 'Reconnect folder' : 'Choose folder…';
     K.$('#btnChooseLocalFolder').disabled = !state.supported;
     K.$('#btnForgetLocalFolder').disabled = !state.folderName;
+    const projectCard = K.$('#projectStorageStatus');
+    if (projectCard) {
+      projectCard.className = card.className;
+      projectCard.innerHTML = state.connected
+        ? `<strong>Browser storage + ${this._esc(state.folderName)}</strong><span>Recovery copy in this browser; every new JPEG is also mirrored into ${this._esc(state.projectFolder)}.</span>`
+        : state.supported
+          ? '<strong>This browser on this device</strong><span>Captures are in local browser storage. Choose a normal folder for an additional JPEG mirror.</span>'
+          : '<strong>This browser on this device</strong><span>Captures are in local browser storage. Use Save / Share backup to copy a ZIP into Files or another app.</span>';
+    }
+    const modalStatus = K.$('#storageChoiceStatus');
+    if (modalStatus) {
+      modalStatus.className = 'storage-choice-status' + (state.connected ? ' mirrored' : '');
+      modalStatus.innerHTML = state.connected
+        ? `<strong>Two local copies</strong><br>Browser recovery storage + ${this._esc(state.folderName)} / ${this._esc(state.projectFolder)}`
+        : '<strong>One local copy</strong><br>Inside this browser profile on this device (IndexedDB). It is not yet mirrored to a normal folder.';
+      K.$('#btnStorageChoose').textContent = state.permission === 'prompt' ? 'Reconnect mirror folder' : 'Choose mirror folder…';
+      K.$('#btnStorageChoose').disabled = !state.supported;
+      K.$('#btnStorageDisconnect').disabled = !state.folderName;
+    }
   },
 
   /* ================= production pane ================= */
@@ -696,36 +718,72 @@ K.ui = {
   },
 
   async startCamera() {
+    return this.startCameraFrom(K.$('#selCamera').value || undefined, K.$('#selRes').value);
+  },
+
+  async startCameraFrom(deviceId, resolution) {
     try {
-      const deviceId = K.$('#selCamera').value || undefined;
-      await K.camera.start(deviceId, K.$('#selRes').value);
+      await K.camera.start(deviceId || undefined, resolution || K.$('#selRes').value);
       await this.refreshDeviceList();
       const s = K.project.current.settings;
-      s.cameraId = K.$('#selCamera').value;
+      s.cameraId = K.camera.settings()?.deviceId || K.$('#selCamera').value;
+      s.resPreset = resolution || K.$('#selRes').value;
+      K.$('#selRes').value = s.resPreset;
+      K.$('#selQuickRes').value = s.resPreset;
       this.persistSettings();
+      return true;
     } catch (e) {
       console.error(e);
       K.toast('Camera error: ' + e.message, 'err', 4000);
       K.$('#noCamera').classList.remove('hidden');
+      this.renderQuickCameraState(e.message);
+      return false;
     }
   },
 
   async refreshDeviceList() {
-    const sel = K.$('#selCamera');
     const cur = K.camera.settings();
     const devices = await K.camera.listDevices();
-    sel.innerHTML = '';
-    devices.forEach((d, i) => {
-      const o = document.createElement('option');
-      o.value = d.deviceId;
-      o.textContent = d.label || `Camera ${i + 1}`;
-      sel.appendChild(o);
-    });
-    const tether = document.createElement('option');
-    tether.value = '__tether__';
-    tether.textContent = 'Tether live view (PTP)';
-    sel.appendChild(tether);
-    if (cur && cur.deviceId) sel.value = cur.deviceId;
+    for (const id of ['#selCamera', '#selQuickCamera']) {
+      const sel = K.$(id);
+      if (!sel) continue;
+      const previous = sel.value;
+      sel.innerHTML = '';
+      devices.forEach((d, i) => {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent = d.label || `Camera ${i + 1}`;
+        sel.appendChild(o);
+      });
+      const tether = document.createElement('option');
+      tether.value = '__tether__';
+      tether.textContent = 'Tether live view (PTP)';
+      sel.appendChild(tether);
+      const wanted = cur?.deviceId || previous || K.project.current?.settings?.cameraId || '';
+      if ([...sel.options].some((option) => option.value === wanted)) sel.value = wanted;
+    }
+    this.renderQuickCameraState();
+  },
+
+  async openQuickCamera() {
+    await this.refreshDeviceList().catch(() => {});
+    const resolution = K.project.current?.settings?.resPreset || K.$('#selRes').value;
+    K.$('#selQuickRes').value = resolution;
+    this.renderQuickCameraState();
+    this.showModal('cameraQuickModal');
+  },
+
+  renderQuickCameraState(error = '') {
+    const state = K.$('#quickCameraState');
+    if (!state) return;
+    state.className = 'quick-state' + (K.camera.running ? ' running' : '');
+    if (error) state.textContent = `Camera could not start: ${error}`;
+    else if (K.camera.running) {
+      const settings = K.camera.settings() || {};
+      const option = K.$('#selQuickCamera')?.selectedOptions?.[0];
+      state.textContent = `Live: ${option?.textContent || 'camera'} · ${settings.width || '?'} × ${settings.height || '?'}`;
+    } else state.textContent = 'Camera is stopped. Captured frames and the current project remain open.';
+    if (K.$('#btnQuickCameraStop')) K.$('#btnQuickCameraStop').disabled = !K.camera.running;
   },
 
   /* build sliders from MediaStreamTrack capabilities */
@@ -1295,6 +1353,12 @@ K.ui = {
       if (K.xsheet.open) K.xsheet.render();
     });
     K.$('#btnProject').addEventListener('click', () => this.openProjectModal());
+    K.$('#selProjectStartMode').value = K.project.startMode();
+    K.$('#selProjectStartMode').addEventListener('change', (event) => {
+      const mode = K.project.setStartMode(event.target.value);
+      K.toast(mode === 'resume-last' ? 'This device will reopen the last project' : 'A closed browser session will start a new shoot', 'ok');
+    });
+    K.$('#btnProjectStorage').addEventListener('click', () => { this.renderLocalFolder(); this.showModal('storageChoiceModal'); });
     K.$('#btnHelp').addEventListener('click', () => this.showModal('helpModal'));
     K.bus.on('project:renamed', ({ name }) => { K.$('#projectName').textContent = name; K.$('#focusProject').textContent = name; });
 
@@ -1371,6 +1435,29 @@ K.ui = {
       this.hideModals();
     });
     K.$('#btnMoreClose').addEventListener('click', () => this.hideModals());
+    K.$('#btnQuickCameraClose').addEventListener('click', () => this.hideModals());
+    K.$('#btnStorageClose').addEventListener('click', () => this.hideModals());
+    K.$('#btnMoreCamera').addEventListener('click', () => this.openQuickCamera());
+    K.$('#btnMoreStorage').addEventListener('click', () => { this.renderLocalFolder(); this.showModal('storageChoiceModal'); });
+    K.$('#btnQuickCameraStart').addEventListener('click', async () => {
+      const started = await this.startCameraFrom(K.$('#selQuickCamera').value, K.$('#selQuickRes').value);
+      if (started) this.hideModals();
+    });
+    K.$('#btnQuickCameraStop').addEventListener('click', () => K.camera.stop());
+    K.$('#selQuickCamera').addEventListener('change', () => this.renderQuickCameraState());
+    K.$('#btnStorageChoose').addEventListener('click', async () => {
+      try {
+        if (K.localFolder.handle && K.localFolder.permission !== 'granted') await K.localFolder.reconnect();
+        else await K.localFolder.choose();
+        K.toast('Local capture folder connected', 'ok');
+        this.renderLocalFolder();
+      } catch (error) { if (error.name !== 'AbortError') K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#btnStorageDisconnect').addEventListener('click', () => { K.localFolder.forget(); this.renderLocalFolder(); });
+    K.$('#btnStorageShare').addEventListener('click', async () => {
+      try { await K.localFolder.shareBackup(); K.toast('Project backup prepared', 'ok'); }
+      catch (error) { if (error.name !== 'AbortError') K.toast(error.message, 'err', 5000); }
+    });
     const moreAction = (selector, action, { close = true } = {}) => {
       K.$(selector).addEventListener('click', () => {
         action();
@@ -1515,6 +1602,8 @@ K.ui = {
     if (ramp.endValue && [...K.$('#selLapseRampEnd').options].some((o) => o.value === ramp.endValue)) K.$('#selLapseRampEnd').value = ramp.endValue;
     K.$('#inLapseRampShots').value = ramp.shots || 24;
     if (s.resPreset) K.$('#selRes').value = s.resPreset;
+    if (K.$('#selQuickRes')) K.$('#selQuickRes').value = s.resPreset || K.$('#selRes').value;
+    K.$('#selProjectStartMode').value = K.project.startMode();
     K.$('#btnLoop').classList.toggle('on', K.playback.loop);
     K.$('#btnMoreLoop').classList.toggle('on', K.playback.loop);
     K.$('#inAudioOffset').value = K.audio.offsetFrames;

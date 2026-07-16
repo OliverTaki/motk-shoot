@@ -67,8 +67,9 @@ network.
   Play/Pause, Hide controls, and Exit visible; **Hide controls** clears the
   screen until the next tap.
 - **Transport bar** — immediate take controls. Desktop keeps the full transport
-  visible. On a phone, Capture, Live, Play/Pause, and stepping remain visible;
-  less-used controls sit in the clearly labelled **•••** modal.
+  visible. On a phone, Capture, Live, Play/Pause, and **CAM** remain visible;
+  portrait hides step buttons when space is tight, and less-used controls sit
+  in the clearly labelled **•••** modal.
 - **Timeline** — one slot = one *koma* (exposure) at your frame rate.
 
 On a phone, the same functions are not replaced by a different product. The
@@ -81,8 +82,9 @@ thumb reach in both portrait and landscape, and Focus mode uses the full display
 
 ## 3. Connect a camera
 
-Open **Settings → Camera** and pick your camera under **Source**, then press
-**Start camera** (or **Restart**). If none is running you'll see this:
+On a phone, press **CAM** beside Live to choose the front/back/lens source and
+resolution in one short modal. On a desktop, open **Settings → Camera** and pick
+the camera under **Source**, then press **Start camera** (or **Restart**).
 
 ![Settings and camera setup](images/14-settings-camera.png)
 
@@ -291,6 +293,8 @@ For a clear camera-room view, press **Focus**. The full screen keeps only
 controls** to clear every button; tap the picture to restore them. **Exit**
 returns to the normal workspace. This is especially useful on iPhone or iPad,
 including landscape shooting, but the same mode is available on desktop.
+Focus **Play** loops the current take until **Pause** is pressed; it does not
+change the project's normal Loop setting.
 
 ![Phone Focus mode](images/13-phone-focus-mode.png)
 
@@ -424,10 +428,17 @@ neutral CSV/JSON intake. Planning stays in MOTK or the owner's chosen system.
 Open **Session → Save**. Every capture already has a project-scoped recovery copy
 in browser storage.
 
-A new browser tab/session starts with an empty shoot. Previous images remain
-closed until you open **Projects → Open project**. Reloading the same tab resumes
-that tab's shoot, protecting against an accidental refresh without exposing an
-older take on the next launch.
+The default **Settings → Project → When MOTK Shoot opens** option starts a new
+shoot after the browser session closes. Previous images remain closed until you
+open **Projects → Open project**. Reloading the same tab, stopping the camera,
+or restarting it keeps that tab's shoot. Choose **Reopen the last project on
+this device** only when the same phone or workstation should return to its last
+project on the next browser session.
+
+Open **Settings → Project → Capture storage** (or **••• → Capture storage** on a
+phone) to see the exact active arrangement. The primary copy is IndexedDB in
+this browser profile on this device. It is local, but it is not visible as an
+ordinary Files folder and will be erased if site data is cleared.
 
 - On compatible desktop Chrome/Edge browsers, **Choose folder** mirrors each new
   JPEG to `<chosen folder>/<project>/frames`; TEST images go to `tests`.
@@ -494,9 +505,11 @@ modes or replug.
 Do a hard refresh: **Ctrl+Shift+R** (Windows/Linux) or **Cmd+Shift+R** (Mac).
 
 **Where are my projects?**
-In your browser's local storage for this site. Use **Export → Backup project**
-regularly to keep a `.zip` on disk. Clearing browser data for the site erases
-local projects, so back up first.
+In IndexedDB inside this browser profile on this device. Open **Settings →
+Project → Capture storage** to see whether a second folder mirror is connected.
+Use **Save / Share backup** regularly to keep a `.zip` in a normal Files folder,
+iCloud Drive, AirDrop destination, or other chosen location. Clearing browser
+data for the site erases the browser copy, so back up first.
 
 ---
 

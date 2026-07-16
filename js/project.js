@@ -3,6 +3,26 @@
 K.project = {
   current: null,
   SESSION_KEY: 'motkShootActiveProjectId',
+  START_MODE_KEY: 'motkShootProjectStartMode',
+  LAST_PROJECT_KEY: 'motkShootLastProjectId',
+
+  startMode() {
+    try {
+      return localStorage.getItem(this.START_MODE_KEY) === 'resume-last' ? 'resume-last' : 'new-session';
+    } catch { return 'new-session'; }
+  },
+
+  setStartMode(mode) {
+    const value = mode === 'resume-last' ? 'resume-last' : 'new-session';
+    try { localStorage.setItem(this.START_MODE_KEY, value); }
+    catch {}
+    return value;
+  },
+
+  _lastProjectId() {
+    try { return localStorage.getItem(this.LAST_PROJECT_KEY) || ''; }
+    catch { return ''; }
+  },
 
   _sessionId() {
     try { return sessionStorage.getItem(this.SESSION_KEY) || ''; }
@@ -11,6 +31,8 @@ K.project = {
 
   _rememberForThisTab(id) {
     try { sessionStorage.setItem(this.SESSION_KEY, id); }
+    catch {}
+    try { localStorage.setItem(this.LAST_PROJECT_KEY, id); }
     catch {}
   },
 
@@ -40,9 +62,9 @@ K.project = {
     // A reload in this tab resumes the active shoot. A new browser tab/session
     // starts clean: older captures stay stored but are never shown until the
     // operator explicitly opens their project.
-    const sessionId = this._sessionId();
-    if (sessionId) {
-      const p = await K.db.get('projects', sessionId);
+    const candidateId = this._sessionId() || (this.startMode() === 'resume-last' ? this._lastProjectId() : '');
+    if (candidateId) {
+      const p = await K.db.get('projects', candidateId);
       if (p) { await this.open(p.id); return; }
     }
     await this.create(this._freshSessionName(), { freshSession: true });

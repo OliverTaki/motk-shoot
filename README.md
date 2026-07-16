@@ -35,8 +35,10 @@ MOTK Shoot does **not** contain MEGATOOLS or MegaProd code.
 ## Cameras
 
 - **Webcam / UVC / HDMI-USB capture:** works directly in the browser.
-- **Phone camera:** open the web app on the phone, allow camera access, and use
-  the touch layout or Focus mode.
+- **Phone camera:** open the web app on the phone, allow camera access, then use
+  the always-visible **CAM** button to switch front/back/lens sources without
+  opening the full Settings panel. The touch layout and Focus mode work in
+  portrait and landscape.
 - **DSLR / mirrorless RAW and vendor controls:** use the optional local
   Companion/tether agent. See [Tether and camera control](docs/TETHER.md).
 - **SIGMA, Nikon, Canon, and Sony:** support depends on the selected browser
@@ -51,11 +53,17 @@ a time.
 Every capture first goes to project-scoped IndexedDB in the browser. This is the
 recovery copy and works on desktop and mobile.
 
-Opening MOTK Shoot in a new browser tab or a later browser session always starts
-with a new, empty shoot. Older captures never appear automatically: open
-**Projects** and choose **Open project** when you deliberately want them. A
-normal reload in the same tab resumes its active shoot so an accidental refresh
-does not lose your place.
+By default, opening MOTK Shoot after the browser session closes starts a new,
+empty shoot. A normal reload and Camera Stop/Restart keep the current project.
+Under **Settings → Project → When MOTK Shoot opens**, an operator who prefers a
+continuous device can choose **Reopen the last project on this device**. Older
+captures never appear automatically under the default: open **Projects** and
+choose **Open project** when you deliberately want them.
+
+**Settings → Project → Capture storage** explains the active storage state in
+one place. IndexedDB inside this browser profile is always the primary local
+recovery copy. It is local, but not a normal Files folder; clearing this site's
+browser data removes it.
 
 Under **Session → Save**:
 

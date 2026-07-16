@@ -7,7 +7,7 @@ const manifest = await readFile(new URL('../manifest.json', import.meta.url), 'u
 
 for (const required of [
   '@media (max-width: 720px) and (orientation: portrait)',
-  '@media (max-height: 540px) and (orientation: landscape) and (max-width: 1000px)',
+  '@media (max-height: 600px) and (orientation: landscape) and (max-width: 1180px)',
   'body.panel-open #center',
   'grid-template-rows: minmax(210px, 1fr) minmax(260px, 44dvh)',
   '#btnCapture::after',
@@ -27,6 +27,11 @@ assert.match(css, /#center \{ display: grid; grid-template-columns: 1fr;/);
 assert.match(html, /id="btnFocus"/);
 assert.match(html, /id="btnFocusHide"/);
 assert.match(html, /id="btnFocusPlay"/);
+assert.match(html, /id="btnQuickCamera"/);
+assert.match(html, /id="cameraQuickModal"/);
+assert.match(html, /id="storageChoiceModal"/);
+assert.match(css, /body\.focus-mode #focusHud \{[\s\S]*pointer-events: auto;/);
+assert.match(css, /#btnQuickCamera \{ display: inline-flex;/);
 assert.doesNotMatch(html, /id="btnFocus(?:Live|Test)"/);
 assert.match(html, /id="shootingControlsModal"/);
 assert.match(css, /\.transport-secondary \{ display: inline-flex; \}/);
