@@ -23,6 +23,7 @@ K.tether = {
   dir: '',
   productionRoot: '',
   configs: [],
+  selectedConfigs: {},
   passesEnabled: false,
   passPresets: [],
   liveViewActive: false,
@@ -257,10 +258,12 @@ K.tether = {
       const res = await this._request('tether.config.list');
       if (!res.ok) throw new Error(res.error || 'camera settings unavailable');
       this.configs = res.configs || [];
+      const restoreErrors = await this._restoreSelectedConfigs();
       this._renderConfigs();
       this.renderPassControls();
       this.renderFocusControls();
       if (K.ui && K.ui.renderLapseRampControls) K.ui.renderLapseRampControls();
+      if (restoreErrors.length) K.toast(`Some camera settings were not restored: ${restoreErrors.join('; ')}`, 'err', 7000);
     } catch (e) {
       this.configs = [];
       if (box) {
@@ -280,6 +283,9 @@ K.tether = {
       if (!res.ok) throw new Error(res.error || 'setting rejected');
       const i = this.configs.findIndex((c) => c.path === path);
       if (i >= 0 && res.config) this.configs[i] = res.config;
+      this.selectedConfigs[path] = res.config?.current || value;
+      if (/\/iso$/i.test(path)) this.selectedConfigs[path.replace(/\/iso$/i, '/iso-auto')] = 'Manual';
+      if (K.ui?.persistSettings) K.ui.persistSettings();
       K.toast(`${res.config?.label || 'Camera setting'}: ${res.config?.current || value}`, 'ok');
       this._renderConfigs();
       this.renderPassControls();
@@ -297,6 +303,35 @@ K.tether = {
     const i = this.configs.findIndex((c) => c.path === path);
     if (i >= 0 && res.config) this.configs[i] = res.config;
     return res.config;
+  },
+
+  async _restoreSelectedConfigs() {
+    const available = new Map(this.configs.map((config) => [config.path, config]));
+    const priority = [
+      '/sigma/exposure/mode', '/sigma/exposure/shutter', '/sigma/exposure/aperture',
+      '/sigma/exposure/iso-auto', '/sigma/exposure/iso', '/sigma/image/white-balance',
+      '/sigma/image/color-mode', '/sigma/image/quality', '/sigma/storage/destination',
+    ];
+    const entries = Object.entries(this.selectedConfigs || {}).filter(([path, value]) => {
+      const config = available.get(path);
+      return config && !config.readonly && config.choices?.includes(value);
+    });
+    entries.sort(([a], [b]) => {
+      const ai = priority.indexOf(a), bi = priority.indexOf(b);
+      return (ai < 0 ? priority.length : ai) - (bi < 0 ? priority.length : bi);
+    });
+    const errors = [];
+    for (const [path, value] of entries) {
+      try {
+        const res = await this._request('tether.config.set', { path, value });
+        if (!res.ok) throw new Error(res.error || 'setting rejected');
+        const index = this.configs.findIndex((config) => config.path === path);
+        if (index >= 0 && res.config) this.configs[index] = res.config;
+      } catch (error) {
+        errors.push(`${available.get(path)?.label || path}: ${error.message}`);
+      }
+    }
+    return errors;
   },
 
   _renderConfigs() {
@@ -388,7 +423,7 @@ K.tether = {
   },
 
   makeBracket() {
-    const config = this.configs.find((c) => /shutterspeed$/i.test(c.path) && c.choices?.length > 1);
+    const config = this.configs.find((c) => /shutter(?:speed)?$/i.test(c.path) && c.choices?.length > 1);
     if (!config) { K.toast('No adjustable shutter-speed setting is available', 'err'); return; }
     const at = Math.max(0, config.choices.indexOf(config.current));
     const values = [config.choices[Math.max(0, at - 1)], config.choices[at], config.choices[Math.min(config.choices.length - 1, at + 1)]];

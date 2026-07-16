@@ -240,6 +240,13 @@ appear:
 - **Camera settings** — with the gphoto2 backend the panel lists **shutter
   speed, ISO, aperture, white balance, image format** and more. Changing a menu
   applies it over PTP before the next shot. (The dummy backend shows test menus.)
+- **SIGMA fp controls** — the same panel provides **M/P/A/S, shutter,
+  aperture, ISO Auto/Manual, ISO, white balance, color mode, image quality, and
+  save destination**. These choices are stored with this MOTK Shoot project
+  and return after reconnecting. The app applies them in the same SDK session
+  used for preview and capture. Leave the body in the exposure mode you want;
+  put a SIGMA lens aperture ring in **A/Auto** when MOTK Shoot should control
+  the aperture.
 
 Now shoot as usual. Each frame that captured a camera original shows a green
 **RAW** badge, and the originals land in the agent's folder (file names

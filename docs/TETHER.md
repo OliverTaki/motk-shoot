@@ -230,6 +230,14 @@ Camera tab → **Tether — RAW originals** → Connect (`ws://localhost:8793`).
   supported capture controls. Changing a menu applies it through PTP before
   the next shot. The dummy backend exposes test menus; digiCamControl capture
   remains available but does not yet expose settings through this protocol.
+- **SIGMA fp settings:** MOTK Shoot exposes exposure mode, shutter speed,
+  aperture, ISO Auto/Manual, ISO, white balance, color mode, image quality, and
+  computer/card+computer destination. The selected values are saved with the
+  MOTK Shoot project and restored after reconnecting. They are applied and
+  verified inside the same native SDK session that produces the next preview
+  or still, so a short-lived diagnostic probe is not treated as the camera
+  body's source of truth. Put a SIGMA lens aperture ring in **A/Auto** so the
+  app can control aperture; the camera body may remain in **M**.
 - **TEST shot:** the TEST transport button fires the same live/tether capture
   path but saves a marked, immutable bin capture without changing the edit.
   Test shots retain RAW names, survive backup/restore, and stay out of as-shot

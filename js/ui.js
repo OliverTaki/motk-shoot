@@ -1529,6 +1529,7 @@ K.ui = {
       mirrorH: K.camera.mirrorH, mirrorV: K.camera.mirrorV, rot180: K.camera.rot180,
       photoMode: K.camera.photoMode,
       loop: K.playback.loop,
+      tetherConfigs: { ...K.tether.selectedConfigs },
       tetherPasses: { enabled: K.tether.passesEnabled, presets: JSON.parse(JSON.stringify(K.tether.passPresets)) },
       lapseRamp: {
         enabled: K.$('#chkLapseRamp').checked,
@@ -1565,6 +1566,7 @@ K.ui = {
     K.camera.mirrorH = !!s.mirrorH; K.camera.mirrorV = !!s.mirrorV; K.camera.rot180 = !!s.rot180;
     K.camera.photoMode = !!s.photoMode;
     K.playback.loop = !!s.loop;
+    K.tether.selectedConfigs = { ...(s.tetherConfigs || {}) };
     K.tether.passesEnabled = !!s.tetherPasses?.enabled;
     K.tether.passPresets = JSON.parse(JSON.stringify(s.tetherPasses?.presets || []));
     if (s.audio) {
@@ -1597,6 +1599,7 @@ K.ui = {
     K.$('#chkTetherPasses').checked = K.tether.passesEnabled;
     K.tether.renderPassControls();
     K.tether.renderFocusControls();
+    if (K.tether.connected) K.tether.refreshConfigs();
     const ramp = s.lapseRamp || {};
     K.$('#chkLapseRamp').checked = !!ramp.enabled;
     K.$('#lapseRampControls').classList.toggle('hidden', !ramp.enabled);
