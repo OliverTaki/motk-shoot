@@ -1,11 +1,11 @@
 # MOTK Shoot — User Guide
 
 A free, browser‑based stop‑motion capture studio. Its basic UVC/webcam workflow
-runs on any modern desktop OS without an app installer. Optional RAW tethering
-uses the bundled Node agent. This guide walks through everyday shooting,
-editing, and delivery with screenshots of the real app.
+runs on phones, tablets, and modern desktop systems without an app installer.
+Optional RAW tethering uses the bundled local Companion/agent. This guide walks
+through camera-room work: set up, shoot, check the take, and hand off the result.
 
-![MOTK Shoot overview](images/01-overview.jpg)
+![MOTK Shoot shooting workspace](images/10-shooting-workspace.png)
 
 ---
 
@@ -17,14 +17,14 @@ editing, and delivery with screenshots of the real app.
 4. [Tether — RAW originals & camera control](#4-tether--raw-originals--camera-control)
 5. [Shoot frames](#5-shoot-frames)
 6. [The timeline (koma grid)](#6-the-timeline-koma-grid)
-7. [Non‑destructive editing](#7-non-destructive-editing)
+7. [Captures and immediate corrections](#7-captures-and-immediate-corrections)
 8. [Onion skin](#8-onion-skin)
 9. [Overlay layers](#9-overlay-layers)
 10. [Monitor tools](#10-monitor-tools)
 11. [Audio & X‑Sheet (lip sync)](#11-audio--x-sheet-lip-sync)
-12. [Playback & review](#12-playback--review)
-13. [Production management](#13-production-management)
-14. [Export & editorial hand‑off](#14-export--editorial-hand-off)
+12. [Playback and take check](#12-playback-and-take-check)
+13. [Shot context and session notes](#13-shot-context-and-session-notes)
+14. [Local copies and hand‑off](#14-local-copies-and-hand-off)
 15. [Keyboard shortcuts](#15-keyboard-shortcuts)
 16. [Troubleshooting](#16-troubleshooting)
 
@@ -44,35 +44,45 @@ needs a *secure context*, which `http://localhost` already is. You can also host
 the folder on any static host (Cloudflare Pages, GitHub Pages…) over HTTPS.
 
 Everything you shoot is saved locally in your browser (IndexedDB) by default.
-Only features you explicitly configure—Google Sheet sync, Apps Script, or an
-external WebSocket bridge—send their documented data over the network.
+MOTK Shoot does not require GAS. Only context URLs, Companion/tether, Observer,
+or bridge features you explicitly configure send their documented data over the
+network.
 
 ---
 
 ## 2. The interface at a glance
 
-![Overview with labels](images/01-overview.jpg)
+![MOTK Shoot shooting workspace](images/10-shooting-workspace.png)
 
-- **Top bar** — project name, the **Edit / +ALT / ⟲ as‑shot** controls (see
-  [editing](#7-non-destructive-editing)), **FPS**, the frame / exposure counter,
-  timecode, and the **MONITOR** and **X‑Sheet** buttons.
+- **Top bar** — project name, frame/exposure progress, and four clear work areas:
+  **Assist**, **Session**, **Settings**, and **Focus**.
 - **Viewport** (centre) — live camera, a reviewed frame, or playback. Onion‑skin
   ghosts of earlier frames show through so you can judge your next pose.
-- **Side panel** (right) — tabs: **CAM · ONION · LAYER · GUIDE · CINE · AUDIO ·
-  REVIEW · PROD · EXPORT · LINK**.
-- **Transport bar** — first/step/play/last, LIVE / LOOP / SHORT, the round
-  **shutter** capture button, **TEST**, per‑capture hold ×, delete, undo/redo,
-  and the **🗂 bin**.
+- **Assist** — onion skin, guides, shooting layers, monitor aids, audio, and
+  X‑Sheet cues. These affect shooting and do not alter the production plan.
+- **Session** — receive a prepared shot list, choose a shot/take, record notes,
+  choose a local mirror folder, and finish the session.
+- **Settings** — project FPS, camera, optional video assist, and local bridge.
+- **Focus** — a full-screen camera-room mode. It keeps only Live, Capture, and
+  Test visible; **Hide controls** clears the screen until the next tap.
+- **Transport bar** — immediate take controls. Less-used controls sit behind
+  **•••** instead of filling the shooting screen.
 - **Timeline** — one slot = one *koma* (exposure) at your frame rate.
+
+On a phone, the same functions are not replaced by a different product. The
+top bar becomes compact, panels open as a lower sheet, capture remains within
+thumb reach, and Focus mode uses the full display.
+
+![Phone shooting layout](images/12-phone-shooting.png)
 
 ---
 
 ## 3. Connect a camera
 
-Open the **CAM** tab and pick your camera under **Source**, then press
+Open **Settings → Camera** and pick your camera under **Source**, then press
 **Start camera** (or **Restart**). If none is running you'll see this:
 
-![Camera setup and guidance](images/09-camera-setup.jpg)
+![Settings and camera setup](images/14-settings-camera.png)
 
 > A camera can only be opened by **one** app at a time. If Start fails with
 > "Camera is busy", close the other app or browser tab using it.
@@ -83,7 +93,7 @@ releases a UVC stream when the page is hidden, minimized, or left, so Windows
 Hello can use a composite camera for sign-in. Return to MOTK Shoot and press
 **Restart** to resume shooting.
 
-Useful **CAM** options: resolution, **Hi‑res photo capture**, **Blackout screen
+Useful camera options: resolution, **Hi‑res photo capture**, **Blackout screen
 during capture** (dims the monitor so it doesn't light your set), JPEG quality,
 mirror/rotate, and manual controls (focus, shutter, ISO, white balance) when the
 camera exposes them.
@@ -92,7 +102,7 @@ camera exposes them.
 
 1. Plug in a **USB webcam**, or feed a camera's clean **HDMI** output into a
    cheap **HDMI‑USB (UVC) capture** dongle (about US$10–20).
-2. In **CAM → Source**, choose the device.
+2. In **Settings → Camera → Source**, choose the device.
 3. Press **Start camera**. That's it — this gives you live view and capture with
    no extra software.
 
@@ -274,6 +284,14 @@ Set the **× hold** box next to the shutter to shoot on twos/threes (each captur
 then occupies that many koma). Use **TEST** to shoot a throw‑away frame into the
 bin *without* adding it to your animation.
 
+For a clear camera-room view, press **Focus**. The full screen keeps only Live,
+Capture, Test, the active project, and exposure count. Press **Hide controls**
+to clear every button; tap the picture to restore them. **Exit** returns to the
+normal workspace. This is especially useful on iPhone or iPad, but the same
+mode is available on desktop.
+
+![Phone Focus mode](images/13-phone-focus-mode.png)
+
 ---
 
 ## 6. The timeline (koma grid)
@@ -294,18 +312,19 @@ wide, with tick marks showing each koma; the ruler marks whole seconds.
 
 ---
 
-## 7. Non‑destructive editing
+## 7. Captures and immediate corrections
 
-Nothing you do on the timeline destroys a shot. Every captured frame lives
-forever in the **🗂 Captures bin**; the timeline is just a reference list.
+Every captured frame stays in the **Captures bin**; the visible take is a
+reference list. The shooting controls cover immediate on-set corrections:
 
 - **Undo / redo** everything with **Ctrl+Z / Ctrl+Shift+Z**.
-- **+ALT** duplicates the current cut as an alternate edit — experiment freely,
-  the original is untouched. Switch cuts from the **Edit** dropdown.
-- **⟲ as‑shot** rebuilds the current edit exactly as you filmed it (capture
-  order, shot holds).
 - Deleting a frame only removes it from the edit; reopen it any time from the
   **🗂 bin**.
+
+Older projects can still contain alternate edits and editorial metadata, so the
+data remains readable. Creating cuts, A/B editorial comparison, and delivery
+package management are intentionally outside the normal MOTK Shoot interface.
+Use an editor or the appropriate external tool after shooting.
 
 ---
 
@@ -313,7 +332,7 @@ forever in the **🗂 Captures bin**; the timeline is just a reference list.
 
 ![Onion skin panel](images/03-onion.jpg)
 
-The **ONION** tab ghosts previous (and optionally next) frames over the live view
+**Assist → Onion** ghosts previous (and optionally next) frames over the live view
 so you can line up your next move. Set how many frames back, the opacity, and
 **Blend** vs **Difference** mode.
 
@@ -323,7 +342,7 @@ so you can line up your next move. Set how many frames back, the opacity, and
 
 ![Layers panel](images/04-layers.jpg)
 
-The **LAYER** tab adds guide overlays that are drawn on the monitor but **never
+**Assist → Layers** adds guide overlays that are drawn on the monitor but **never
 exported**:
 
 - **Image / Video** reference (rotoscope) — a video layer steps with your koma.
@@ -339,7 +358,7 @@ can move across koma. Drag a selected layer right in the viewport.
 
 ![Cinematography monitor tools](images/05-cine.jpg)
 
-The **CINE** tab adds non‑destructive monitor aids: **histogram + clipping
+**Assist → Monitor** adds non‑destructive monitor aids: **histogram + clipping
 zebra** (exposure), **focus peaking**, **chroma‑key** preview (reveals a "behind"
 layer), and **anamorphic desqueeze**. These affect only what you see, not the
 saved frames.
@@ -350,62 +369,65 @@ saved frames.
 
 ![X-Sheet](images/06-xsheet.jpg)
 
-Load one or more audio tracks in the **AUDIO** tab (waveform, offset, volume,
-mute; audio scrubs as you step). Open the **X‑Sheet** (top bar or **X**) to see
+Load one or more audio tracks in **Assist → Audio** (waveform, offset, volume,
+mute; audio scrubs as you step). Open the **X‑Sheet** there (or press **X**) to see
 every koma in a column and type **dialogue / phonemes** per frame — pair it with
 face‑set layers for lip sync.
 
 ---
 
-## 12. Playback & review
+## 12. Playback and take check
 
-Press **Space** or **▶** to play at your project FPS. **LOOP** repeats, **SHORT**
-plays just the last 1.5 seconds, and you can set a speed (0.25/0.5/1/2×) and an
-in/out loop range. The **REVIEW** tab shows two edits or two takes side‑by‑side
-for comparison. Hold **P** to flip momentarily between the selected frame and
-live.
+Press **Space** or **▶** to play at your project FPS. The additional transport
+controls behind **•••** include loop and short playback of the last 1.5 seconds.
+Click a frame to check it, step to compare adjacent poses, and hold **P** to flip
+momentarily between the selected frame and live.
 
----
-
-## 13. Production management
-
-![Production panel](images/07-production.jpg)
-
-This is what Dragonframe doesn't do. In the **PROD** tab you manage a whole
-production:
-
-1. **Create a production** and set a **naming pattern** (e.g.
-   `{scene}_{shot}_T{take:2}` → `SC010_C020_T03`).
-2. Pull your shot list from a **published Google Sheet (CSV)** or a **user‑owned
-   MOTK Apps Script** endpoint — or add shots inline, one row at a time.
-3. Pick a shot and click **New take**: a correctly‑named project is created in
-   one click; you just keep adding takes.
-4. Per‑shot **notes** and **handover (申し送り)** flow back to the sheet, along
-   with take results (frames, duration, RAW count) on **End session** or the
-   auto‑report interval.
-
-With the production agent running, each take's **JPEGs, RAW originals, audio,
-metadata, report and backup** are mirrored into **one self‑contained folder** per
-shot — portable, and linkable to MOTK / MOTK3D pipelines.
+This is immediate shooting review, not an editorial room. A/B cut comparison
+and alternate-edit building are not part of the normal shooting workflow.
 
 ---
 
-## 14. Export & editorial hand‑off
+## 13. Shot context and session notes
 
-![Export panel](images/08-export.jpg)
+![Session context](images/11-session-context.png)
 
-The **EXPORT** tab produces:
+Open **Session → Context** when the production prepared the shot list elsewhere:
 
-- **Movie** (MP4 / WebM, with audio) and **numbered JPEG sequence** (ZIP).
-- **Project backup** (`.zip`) that re‑imports losslessly, and an **edit‑list
-  CSV**.
-- **Editorial interchange** — **CMX3600 EDL**, **FCPXML 1.10**, **AAF‑lite JSON**
-  and a **conform recipe** (ProRes 422 HQ / DNxHR HQ / H.264 ffmpeg commands)
-  for finishing in DaVinci Resolve, Premiere, or Final Cut, with your RAW file
-  mapping preserved.
+1. Import a prepared **CSV or JSON** file from MOTK, a spreadsheet, or another
+   production tool. You can also refresh a CSV/JSON context URL when its server
+   permits browser access.
+2. Select the production and shot, then press **Open next take**.
+3. Shoot. Record **Notes from the floor** and **Handover** without changing the
+   production plan.
+4. Press **Finish session** to save the result: captures, exposures, duration,
+   notes, and handover.
 
-For a frame‑exact master, export the JPEG/RAW sequence and encode with ffmpeg
-using the generated recipe.
+MOTK Shoot does not require GAS, create productions, add shots, or manage Google
+Sheets. GAS-era project data remains compatible, but new sessions use the
+neutral CSV/JSON intake. Planning stays in MOTK or the owner's chosen system.
+
+---
+
+## 14. Local copies and hand‑off
+
+Open **Session → Save**. Every capture already has a project-scoped recovery copy
+in browser storage.
+
+- On compatible desktop Chrome/Edge browsers, **Choose folder** mirrors each new
+  JPEG to `<chosen folder>/<project>/frames`; TEST images go to `tests`.
+- On iPhone and iPad, browsers cannot keep a persistent arbitrary folder. Use
+  **Save / Share backup** to send the session to Files, AirDrop, or another
+  share destination.
+- For RAW originals, vendor SDK control, and a trusted production disk root,
+  use the optional local Companion/tether agent.
+
+The chosen mirror never replaces browser storage, and MOTK Shoot never silently
+overwrites an existing file. Disconnecting it only stops future copies.
+
+Older project backups and export metadata remain readable for compatibility.
+Movie mastering and editorial interchange belong in the post-production tool,
+not in the normal camera-room interface.
 
 ---
 

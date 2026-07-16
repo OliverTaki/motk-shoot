@@ -30,7 +30,9 @@ K.production = {
       id: String(p.id || ('prod_' + Date.now().toString(36))),
       name: String(p.name || 'Production'),
       sheetRef: String(p.sheetRef || ''),
+      contextUrl: String(p.contextUrl || p.sheetRef || ''),
       gasUrl: String(p.gasUrl || ''),
+      writeBack: p.writeBack === true,
       root: String(p.root || ''),
       namingPattern: String(p.namingPattern || '{scene}_{shot}_T{take:2}'),
       autoReportMinutes: K.clamp(parseInt(p.autoReportMinutes, 10) || 5, 1, 1440),
@@ -95,7 +97,9 @@ K.production = {
       id: 'prod_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       name,
       sheetRef: data.sheetRef,
+      contextUrl: data.contextUrl,
       gasUrl: data.gasUrl,
+      writeBack: data.writeBack === true,
       root: data.root,
       namingPattern: data.namingPattern,
       shots: [], pending: [], createdAt: Date.now(), updatedAt: Date.now(),
@@ -117,7 +121,7 @@ K.production = {
   async updateProduction(patch) {
     const production = this.active();
     if (!production) return;
-    for (const key of ['name', 'sheetRef', 'gasUrl', 'root', 'namingPattern']) {
+    for (const key of ['name', 'sheetRef', 'contextUrl', 'gasUrl', 'root', 'namingPattern']) {
       if (patch[key] !== undefined) production[key] = String(patch[key]).trim();
     }
     if (patch.autoReportMinutes !== undefined) {
@@ -231,17 +235,77 @@ K.production = {
 
   _shotFromRow(row) {
     return this._normalizeShot({
-      shotId: row.shot_id || row.shotid || row.id,
+      shotId: row.shot_id || row.shotId || row.shotid || row.id,
       scene: row.scene,
-      name: row.name || row.shot_name,
-      plannedFrames: row.planned_frames || row.plannedframes,
+      name: row.name || row.shot_name || row.shotName,
+      plannedFrames: row.planned_frames || row.plannedFrames || row.plannedframes,
       fps: row.fps,
       status: row.status,
       notes: row.notes,
       handover: row.handover,
-      bestTake: row.best_take,
-      source: 'sheet', dirty: false, updatedAt: Date.now(),
+      bestTake: row.best_take || row.bestTake,
+      source: row.source || 'context', dirty: false, updatedAt: Date.now(),
     });
+  },
+
+  async _ensureContextProduction({ name = 'Imported production', id = '', contextUrl = '' } = {}) {
+    let production = id ? this.state.productions.find((item) => item.id === id) : null;
+    if (!production && name) production = this.state.productions.find((item) => item.name === name);
+    if (!production) {
+      production = this._normalizeProduction({
+        id: id || ('prod_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)),
+        name, contextUrl, sheetRef: contextUrl, shots: [], pending: [], createdAt: Date.now(), updatedAt: Date.now(),
+      });
+      this.state.productions.push(production);
+    }
+    if (contextUrl) { production.contextUrl = contextUrl; production.sheetRef = contextUrl; }
+    this.state.activeId = production.id;
+    await this.save();
+    return production;
+  },
+
+  async importContext(data, { name = 'Imported production', url = '' } = {}) {
+    const source = Array.isArray(data) ? { shots: data } : (data || {});
+    const meta = source.production && typeof source.production === 'object' ? source.production : source;
+    const shots = Array.isArray(source.shots) ? source.shots : (Array.isArray(meta.shots) ? meta.shots : []);
+    const production = await this._ensureContextProduction({
+      id: String(meta.id || meta.productionId || '').trim(),
+      name: String(meta.name || meta.productionName || name || 'Imported production').trim(),
+      contextUrl: url,
+    });
+    if (meta.namingPattern) production.namingPattern = String(meta.namingPattern);
+    if (meta.root) production.root = String(meta.root);
+    const result = await this.mergeRows(shots);
+    production.lastSyncAt = Date.now();
+    await this.save();
+    return { ...result, productionId: production.id, shots: production.shots.length };
+  },
+
+  async importContextText(text, { name = 'Imported production', url = '' } = {}) {
+    const src = String(text || '').replace(/^\uFEFF/, '').trim();
+    if (!src) throw new Error('The context file is empty');
+    if (src.startsWith('{') || src.startsWith('[')) {
+      return this.importContext(JSON.parse(src), { name, url });
+    }
+    await this._ensureContextProduction({ name, contextUrl: url });
+    const result = await this.mergeRows(this.parseCsv(src));
+    return { ...result, productionId: this.active().id, shots: this.active().shots.length };
+  },
+
+  async pullContext(url = this.active()?.contextUrl) {
+    if (!url) throw new Error('Context URL is required');
+    let text;
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      text = await response.text();
+    } catch (directError) {
+      if (!K.tether.connected) throw new Error(`Context fetch failed (${directError.message})`);
+      text = await K.tether.fetchSheet(url);
+    }
+    const result = await this.importContextText(text, { name: this.active()?.name || 'Imported production', url });
+    K.toast(`Context refreshed: ${result.shots} shots`, 'ok');
+    return result;
   },
 
   async mergeRows(rows) {
@@ -384,6 +448,22 @@ K.production = {
     };
   },
 
+  sessionResult() {
+    const linked = this.takeResult();
+    if (linked) return linked;
+    const project = K.project.current;
+    const raw = new Set(K.frames.captures.flatMap((capture) => String(capture.raw || '').split(';').filter(Boolean)));
+    return {
+      production_id: '', shot_id: '', take: project.take || '',
+      project_id: project.id, project_name: project.name, fps: project.fps,
+      frames: K.frames.count(), exposures: K.frames.totalExposures(),
+      duration_s: +(K.frames.totalExposures() / project.fps).toFixed(4),
+      raw_count: raw.size, captures: K.frames.captures.length,
+      started_at: new Date(project.sessionStartedAt || project.createdAt).toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  },
+
   shotMeta() {
     const production = this.active(), shot = this.currentShot();
     if (!production || !shot) return null;
@@ -430,36 +510,31 @@ K.production = {
   async endSession({ backup = true, downloadReport = false, quiet = false } = {}) {
     if (this._reporting) return;
     const context = this.currentContext();
-    if (!context) { if (!quiet) K.toast('This project is not a production take', 'err'); return; }
     this._reporting = true;
-    let editorialWritten = false;
     try {
       K.status('Ending production session…');
-      const result = this.takeResult();
+      const result = this.sessionResult();
       K.project.current.lastReport = result;
       await K.project.save();
-      await this.writeFolderMeta();
-      await this._mirrorAudio();
+      if (context) await this.writeFolderMeta();
+      if (context) await this._mirrorAudio();
       const csv = await this.reportCsv();
-      if (K.tether.connected) await K.tether.folderReport(context, csv);
-      if (K.tether.connected && K.editorial && K.frames.activeEdit().items.length) {
-        try { await K.editorial.writePackage({ quiet: true }); editorialWritten = true; }
-        catch (e) { console.warn('Editorial hand-off:', e.message); }
-      }
+      if (context && K.tether.connected) await K.tether.folderReport(context, csv);
+      if (K.localFolder) await K.localFolder.writeSession(result, csv).catch((e) => console.warn('Local session record:', e.message));
       if (downloadReport) K.downloadBlob('production_report.csv', new Blob([csv], { type: 'text/csv' }));
-      if (backup && K.tether.connected) {
+      if (backup && context && K.tether.connected) {
         const zip = await K.exporter.buildProjectBackup();
         await K.tether.folderBackup(context, zip);
       }
       const production = this.active();
-      if (production?.gasUrl) {
+      if (production?.writeBack && production?.gasUrl) {
         try { await this._postGas('take-results', result); }
         catch { await this._queue('take-results', result); }
         await this.flushPending();
       }
-      if (!quiet) K.toast(editorialWritten
-        ? 'Session report, editorial package, metadata, and backup written'
-        : 'Session report, metadata, and backup written', 'ok', 4000);
+      if (!quiet) K.toast(context
+        ? 'Session result, metadata, and backup written'
+        : 'Session result saved', 'ok', 4000);
     } finally {
       K.status('');
       this._reporting = false;

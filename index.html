@@ -18,24 +18,16 @@
       <svg viewBox="0 0 32 32" width="20" height="20"><circle cx="16" cy="16" r="11" fill="none" stroke="#ff5f45" stroke-width="3.5"/><circle cx="16" cy="16" r="4" fill="#ff5f45"/></svg>
       <span>MOTK Shoot</span>
     </div>
-    <button id="btnProject" class="tb-btn" title="Projects (Ctrl+O)">📁 <span id="projectName">Untitled</span></button>
-    <div class="tb-group">
-      <label>Edit</label>
-      <select id="selEdit" title="Active edit — captures are never destroyed; each edit is a separate cut"></select>
-      <button id="btnAltEdit" class="tb-btn" title="Duplicate the current edit as an alternative cut">+ALT</button>
-      <button id="btnAsShot" class="tb-btn" title="Reset current edit to the filmed take; test shots stay in the bin">⟲ as-shot</button>
-    </div>
-    <div class="tb-group">
-      <label>FPS</label>
-      <input id="inFps" type="number" min="1" max="60" step="1" value="12" title="Project frame rate">
-    </div>
-    <div class="tb-group">
+    <button id="btnProject" class="tb-btn project-button" title="Projects (Ctrl+O)">📁 <span id="projectName">Untitled</span></button>
+    <div class="tb-group shoot-progress">
       <span id="frameCounter" class="mono" title="frame / total exposures">0 / 0</span>
       <span id="timecode" class="mono dim" title="timecode">00:00:00.00</span>
     </div>
     <div class="spacer"></div>
-    <button id="btnMonitor" class="tb-btn" title="Open a clean second-display video assist window">MONITOR</button>
-    <button id="btnXsheet" class="tb-btn" title="X-Sheet (X)">X-Sheet</button>
+    <button id="btnAssist" class="tb-btn top-action" title="Onion skin, guides and shooting aids">Assist</button>
+    <button id="btnSession" class="tb-btn top-action" title="Shot context, notes and local media">Session</button>
+    <button id="btnSettings" class="tb-btn top-action" title="Camera and project setup">Settings</button>
+    <button id="btnFocus" class="tb-btn focus-action" title="Fill the screen with the shooting view">Focus</button>
     <button id="btnHelp" class="tb-btn" title="Keyboard shortcuts (?)">?</button>
   </header>
 
@@ -66,20 +58,40 @@
 
     <!-- ======= SIDEBAR ======= -->
     <aside id="sidebar">
+      <div id="panelHeader">
+        <div><span id="panelEyebrow">ASSIST</span><strong id="panelTitle">Onion skin</strong></div>
+        <button id="btnClosePanel" type="button" title="Close panel" aria-label="Close panel">×</button>
+      </div>
       <nav id="sideTabs">
-        <button data-tab="camera" class="active" title="Camera">CAM</button>
-        <button data-tab="onion" title="Onion skin">ONION</button>
-        <button data-tab="layers" title="Overlay layers: reference images, primitives, masks, keyframes">LAYER</button>
-        <button data-tab="guides" title="Guides & masks">GUIDE</button>
-        <button data-tab="cine" title="Cinematography monitor tools">CINE</button>
-        <button data-tab="audio" title="Audio">AUDIO</button>
-        <button data-tab="review" title="Playback and take review">REVIEW</button>
-        <button data-tab="production" title="Production shots and takes">PROD</button>
-        <button data-tab="export" title="Export">EXPORT</button>
-        <button data-tab="link" title="External link (WebSocket bridge)">LINK</button>
+        <button data-tab="project" data-group="settings" title="Project setup">PROJECT</button>
+        <button data-tab="camera" data-group="settings" title="Camera and Companion setup">CAMERA</button>
+        <button data-tab="link" data-group="settings" title="External trigger bridge">BRIDGE</button>
+        <button data-tab="onion" data-group="assist" title="Onion skin">ONION</button>
+        <button data-tab="guides" data-group="assist" title="Guides & masks">GUIDES</button>
+        <button data-tab="layers" data-group="assist" title="Shooting reference layers">LAYERS</button>
+        <button data-tab="cine" data-group="assist" title="Cinematography monitor tools">MONITOR</button>
+        <button data-tab="audio" data-group="assist" title="Audio and lip-sync cues">AUDIO</button>
+        <button data-tab="session" data-group="session" title="Shot context and session record">CONTEXT</button>
+        <button data-tab="export" data-group="session" title="Save and hand off the captured session">SAVE</button>
+        <button data-tab="review" data-group="legacy" class="legacy-tool" title="Legacy comparison tools">REVIEW</button>
+        <button data-tab="production" data-group="legacy" class="legacy-tool" title="Legacy production tools">PROD</button>
       </nav>
 
       <div class="tabpanes">
+        <!-- PROJECT SETTINGS -->
+        <section data-pane="project" class="pane">
+          <h3>Project</h3>
+          <label class="row"><span>Frame rate</span><input id="inFps" type="number" min="1" max="60" step="1" value="12" title="Project frame rate"><span class="dim small">fps</span></label>
+          <div class="btnrow"><button id="btnMonitor" class="btn" title="Open a clean second-display video assist window">Open video assist</button></div>
+          <h3>Legacy edit compatibility</h3>
+          <p class="dim small">Old projects with alternate edits remain readable. MOTK Shoot now keeps editorial work out of the normal shooting flow.</p>
+          <label class="row"><span>Edit</span><select id="selEdit" title="Active legacy edit"></select></label>
+          <div class="btnrow">
+            <button id="btnAltEdit" class="btn" title="Duplicate the current edit as an alternative cut">Duplicate edit</button>
+            <button id="btnAsShot" class="btn" title="Reset current edit to the filmed take; test shots stay in the bin">Reset as-shot</button>
+          </div>
+        </section>
+
         <!-- CAMERA -->
         <section data-pane="camera" class="pane active">
           <h3>Source</h3>
@@ -278,6 +290,7 @@
         <!-- AUDIO -->
         <section data-pane="audio" class="pane">
           <h3>Audio tracks</h3>
+          <div class="btnrow"><button id="btnXsheet" class="btn accent" title="X-Sheet (X)">Open X-Sheet</button></div>
           <div class="btnrow">
             <button id="btnAudioLoad" class="btn">+ Track…</button>
             <button id="btnAudioClear" class="btn danger hidden">Remove selected</button>
@@ -298,6 +311,33 @@
           <div id="faceInfo" class="dim small">Generic A/E/I/O/U/MBP/FV/L/WQ/rest mouth chart.</div>
           <label class="row"><span>X / Y</span><input type="number" id="inFaceX" value="0" style="width:65px"><input type="number" id="inFaceY" value="220" style="width:65px"></label>
           <label class="row"><span>Scale %</span><input type="number" id="inFaceScale" min="10" max="500" value="100" style="width:70px"></label>
+        </section>
+
+        <!-- SHOOTING SESSION -->
+        <section data-pane="session" class="pane session-pane">
+          <h3>Current shot</h3>
+          <div id="sessionContextCard" class="session-card"><div class="dim small">Import a prepared shot list, then open a take.</div></div>
+          <label class="row"><span>Production</span><select id="selSessionProduction"></select></label>
+          <label class="row"><span>Shot</span><select id="selSessionShot"></select></label>
+          <div class="btnrow"><button id="btnOpenSessionTake" class="btn accent">Open next take</button></div>
+
+          <h3>Receive context</h3>
+          <p class="dim small">Import prepared CSV or JSON from MOTK, another production tool, or a local file. This screen does not create or redesign the production.</p>
+          <div class="btnrow"><button id="btnImportContext" class="btn">Import CSV / JSON…</button></div>
+          <label class="stack"><span>Context URL</span><input id="inContextUrl" type="text" placeholder="https://…/shots.json or shots.csv"></label>
+          <div class="btnrow"><button id="btnPullContext" class="btn">Refresh context</button></div>
+
+          <h3>Shooting notes</h3>
+          <label class="stack"><span>Notes from the floor</span><textarea id="sessionNotes" rows="3"></textarea></label>
+          <label class="stack"><span>Handover</span><textarea id="sessionHandover" rows="3"></textarea></label>
+          <div class="btnrow"><button id="btnSaveSessionNotes" class="btn">Save notes</button><button id="btnFinishSession" class="btn accent">Finish session</button></div>
+          <div id="sessionResult" class="dim small"></div>
+
+          <h3>Local capture folder</h3>
+          <p class="dim small">Browser storage always keeps the recovery copy. Compatible desktop browsers can also mirror each new JPEG into a folder you choose. iPhone and iPad use Save to Files at the end of the session.</p>
+          <div id="localFolderStatus" class="storage-card"><strong>Browser storage</strong><span>Choose a folder for a second local copy.</span></div>
+          <div class="btnrow"><button id="btnChooseLocalFolder" class="btn">Choose folder…</button><button id="btnForgetLocalFolder" class="btn">Disconnect</button></div>
+          <div class="btnrow"><button id="btnShareSession" class="btn">Save / Share backup…</button></div>
         </section>
 
         <!-- REVIEW -->
@@ -435,16 +475,16 @@
 
   <!-- ======= TRANSPORT ======= -->
   <div id="transport">
-    <button id="btnFirst" class="t-btn" title="First frame (Home)">⏮</button>
+    <button id="btnFirst" class="t-btn transport-secondary" title="First frame (Home)">⏮</button>
     <button id="btnStepBack" class="t-btn" title="Step back (1 / ←)">◀︎</button>
     <button id="btnPlay" class="t-btn wide" title="Play / stop (Space)">▶</button>
     <button id="btnStepFwd" class="t-btn" title="Step forward (2 / →)">▶︎</button>
-    <button id="btnLast" class="t-btn" title="Last frame (End)">⏭</button>
-    <span class="t-sep"></span>
+    <button id="btnLast" class="t-btn transport-secondary" title="Last frame (End)">⏭</button>
+    <span class="t-sep transport-secondary"></span>
     <button id="btnLive" class="t-btn" title="Toggle live view (3)">LIVE</button>
-    <button id="btnLoop" class="t-btn" title="Loop playback (L)">LOOP</button>
-    <button id="btnShort" class="t-btn" title="Short play — last 1.5 seconds (4)">SHORT</button>
-    <span class="t-sep"></span>
+    <button id="btnLoop" class="t-btn transport-secondary" title="Loop playback (L)">LOOP</button>
+    <button id="btnShort" class="t-btn transport-secondary" title="Short play — last 1.5 seconds (4)">SHORT</button>
+    <span class="t-sep transport-secondary"></span>
     <button id="btnCapture" title="Capture frame (Enter)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
         <circle cx="12" cy="12" r="9.2"/>
@@ -452,13 +492,14 @@
       </svg>
     </button>
     <button id="btnTestCapture" class="t-btn test-capture" title="Test shot — save to captures bin without changing the edit">TEST</button>
-    <span class="t-sep"></span>
+    <span class="t-sep transport-secondary"></span>
     <label class="t-mini" title="Exposures (hold) applied to each new capture">×<input id="inCaptureHold" type="number" min="1" max="12" value="1"></label>
-    <button id="btnDelete" class="t-btn" title="Remove from edit — capture is kept in the bin (Del)">🗑</button>
-    <span class="t-sep"></span>
-    <button id="btnUndo" class="t-btn" title="Undo edit change (Ctrl+Z)">↩</button>
-    <button id="btnRedo" class="t-btn" title="Redo (Ctrl+Shift+Z)">↪</button>
-    <button id="btnBin" class="t-btn" title="Captures bin — every shot ever taken, restore any of them">🗂</button>
+    <button id="btnTransportMore" class="t-btn" title="More shooting controls" aria-expanded="false">•••</button>
+    <button id="btnDelete" class="t-btn transport-secondary" title="Remove from edit — capture is kept in the bin (Del)">🗑</button>
+    <span class="t-sep transport-secondary"></span>
+    <button id="btnUndo" class="t-btn transport-secondary" title="Undo edit change (Ctrl+Z)">↩</button>
+    <button id="btnRedo" class="t-btn transport-secondary" title="Redo (Ctrl+Shift+Z)">↪</button>
+    <button id="btnBin" class="t-btn transport-secondary" title="Captures bin — every shot ever taken, restore any of them">🗂</button>
     <div class="spacer"></div>
     <span id="statusMsg" class="dim small"></span>
   </div>
@@ -472,6 +513,18 @@
       <div id="tlRuler"></div>
       <div id="reel"></div>
     </div>
+  </div>
+</div>
+
+<!-- ======= FOCUS MODE ======= -->
+<div id="focusHud" aria-label="Focus shooting controls">
+  <div class="focus-readout"><span id="focusProject">Untitled</span><span id="focusCounter" class="mono">0 / 0</span></div>
+  <div id="focusControls">
+    <button id="btnFocusLive" class="focus-btn">LIVE</button>
+    <button id="btnFocusCapture" class="focus-btn capture">CAPTURE</button>
+    <button id="btnFocusTest" class="focus-btn">TEST</button>
+    <button id="btnFocusHide" class="focus-btn">Hide controls</button>
+    <button id="btnFocusExit" class="focus-btn">Exit</button>
   </div>
 </div>
 
@@ -536,9 +589,11 @@
 <input type="file" id="fileProject" accept=".zip" class="hidden">
 <input type="file" id="fileLayerImg" accept="image/*" class="hidden">
 <input type="file" id="fileLayerVideo" accept="video/*" class="hidden">
+<input type="file" id="fileContext" accept=".csv,.json,text/csv,application/json" class="hidden">
 
 <script src="js/util.js"></script>
 <script src="js/db.js"></script>
+<script src="js/local-folder.js"></script>
 <script src="js/camera.js"></script>
 <script src="js/frames.js"></script>
 <script src="js/viewport.js"></script>

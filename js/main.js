@@ -20,6 +20,7 @@
   K.bridge.init();
   await K.production.init();
   await K.project.init();
+  await K.localFolder.init();
   K.timeline.init();
   K.xsheet.init();
   K.ui.init();

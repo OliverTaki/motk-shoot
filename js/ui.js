@@ -9,7 +9,9 @@ K.ui = {
   _capturing: false,
 
   init() {
+    this._shell();
     this._tabs();
+    this._sessionPane();
     this._cameraPane();
     this._onionPane();
     this._layersPane();
@@ -26,7 +28,7 @@ K.ui = {
     this._dragDrop();
     this._waveform();
 
-    K.bus.on('project:opened', () => { this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); });
+    K.bus.on('project:opened', () => { this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); this.renderSession(); });
     K.bus.on('edits:changed', () => { this.refreshEditSelect(); this.renderReviewTargets(); });
     K.bus.on('frames:changed', () => this.updateCounters());
     K.bus.on('mode:changed', () => this.updateModeUI());
@@ -59,7 +61,180 @@ K.ui = {
       this.renderAudioTracks();
     });
     K.bus.on('audio:changed', () => { this.renderAudioTracks(); this.redrawWave(); });
-    K.bus.on('production:changed', () => this.renderProduction());
+    K.bus.on('production:changed', () => { this.renderProduction(); this.renderSession(); });
+    K.bus.on('local-folder:changed', () => this.renderLocalFolder());
+    K.bus.on('local-folder:wrote', ({ name }) => K.status(`Local copy: ${name}`));
+    this.renderSession();
+  },
+
+  /* ================= product shell ================= */
+  _shell() {
+    K.$('#btnAssist').addEventListener('click', () => this.openPanel('assist', 'onion'));
+    K.$('#btnSession').addEventListener('click', () => this.openPanel('session', 'session'));
+    K.$('#btnSettings').addEventListener('click', () => this.openPanel('settings', 'camera'));
+    K.$('#btnClosePanel').addEventListener('click', () => this.closePanel());
+    K.$('#btnTransportMore').addEventListener('click', (event) => {
+      const expanded = document.body.classList.toggle('transport-expanded');
+      event.currentTarget.setAttribute('aria-expanded', String(expanded));
+    });
+    K.$('#btnFocus').addEventListener('click', () => this.enterFocus());
+    K.$('#btnFocusExit').addEventListener('click', () => this.exitFocus());
+    K.$('#btnFocusHide').addEventListener('click', () => document.body.classList.add('focus-controls-hidden'));
+    K.$('#btnFocusCapture').addEventListener('click', () => this.capture());
+    K.$('#btnFocusTest').addEventListener('click', () => this.capture({ test: true }));
+    K.$('#btnFocusLive').addEventListener('click', () => this.toggleLive());
+    K.$('#viewportWrap').addEventListener('click', () => {
+      if (document.body.classList.contains('focus-mode') && document.body.classList.contains('focus-controls-hidden')) {
+        document.body.classList.remove('focus-controls-hidden');
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && document.body.classList.contains('focus-mode')) this.exitFocus({ skipFullscreen: true });
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && document.body.classList.contains('focus-mode')) this.exitFocus();
+    }, true);
+  },
+
+  activateTab(tab, group, { open = true } = {}) {
+    const button = K.$(`#sideTabs button[data-tab="${tab}"]`);
+    if (!button) return;
+    document.body.dataset.panelGroup = group || button.dataset.group || 'assist';
+    K.$$('#sideTabs button').forEach((item) => item.classList.toggle('active', item === button));
+    K.$$('.pane').forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === tab));
+    K.$('#panelEyebrow').textContent = document.body.dataset.panelGroup.toUpperCase();
+    K.$('#panelTitle').textContent = button.title || button.textContent.trim();
+    if (open) document.body.classList.add('panel-open');
+    for (const [id, name] of [['#btnAssist', 'assist'], ['#btnSession', 'session'], ['#btnSettings', 'settings']]) {
+      K.$(id).setAttribute('aria-pressed', String(document.body.classList.contains('panel-open') && document.body.dataset.panelGroup === name));
+    }
+  },
+
+  openPanel(group, tab) { this.activateTab(tab, group, { open: true }); },
+  closePanel() {
+    document.body.classList.remove('panel-open');
+    for (const id of ['#btnAssist', '#btnSession', '#btnSettings']) K.$(id).setAttribute('aria-pressed', 'false');
+  },
+
+  async enterFocus() {
+    this.closePanel();
+    document.body.classList.add('focus-mode');
+    document.body.classList.remove('focus-controls-hidden');
+    K.$('#focusProject').textContent = K.project.current?.name || 'Untitled';
+    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+      await document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+    }
+  },
+
+  async exitFocus({ skipFullscreen = false } = {}) {
+    document.body.classList.remove('focus-mode', 'focus-controls-hidden');
+    if (!skipFullscreen && document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen().catch(() => {});
+  },
+
+  /* ================= shooting session ================= */
+  _sessionPane() {
+    const contextFile = K.$('#fileContext');
+    K.$('#btnImportContext').addEventListener('click', () => contextFile.click());
+    contextFile.addEventListener('change', async () => {
+      const file = contextFile.files?.[0];
+      if (!file) return;
+      try {
+        const name = file.name.replace(/\.(csv|json)$/i, '').replace(/[-_]+/g, ' ') || 'Imported production';
+        await K.production.importContextText(await file.text(), { name });
+        K.toast('Prepared shot context imported', 'ok');
+        this.renderSession();
+      } catch (error) { K.toast('Context import: ' + error.message, 'err', 5000); }
+      contextFile.value = '';
+    });
+    K.$('#btnPullContext').addEventListener('click', async () => {
+      try { await K.production.pullContext(K.$('#inContextUrl').value.trim()); this.renderSession(); }
+      catch (error) { K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#selSessionProduction').addEventListener('change', async (event) => {
+      await K.production.selectProduction(event.target.value);
+      this._selectedShotId = K.production.active()?.shots[0]?.shotId || '';
+      this.renderSession();
+    });
+    K.$('#selSessionShot').addEventListener('change', (event) => { this._selectedShotId = event.target.value; this.renderSession(); });
+    K.$('#btnOpenSessionTake').addEventListener('click', async () => {
+      try { await K.production.newTake(this._selectedShotId); this.renderSession(); this.closePanel(); }
+      catch (error) { K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#btnSaveSessionNotes').addEventListener('click', async () => {
+      if (!this._selectedShotId) return;
+      await K.production.updateShot(this._selectedShotId, {
+        notes: K.$('#sessionNotes').value,
+        handover: K.$('#sessionHandover').value,
+      }, { queue: false });
+      K.toast('Shooting notes saved locally', 'ok');
+      this.renderSession();
+    });
+    K.$('#btnFinishSession').addEventListener('click', async () => {
+      try { await K.production.endSession({ backup: true }); this.renderSession(); }
+      catch (error) { K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#btnChooseLocalFolder').addEventListener('click', async () => {
+      try {
+        if (K.localFolder.handle && K.localFolder.permission !== 'granted') await K.localFolder.reconnect();
+        else await K.localFolder.choose();
+        K.toast('Local capture folder connected', 'ok');
+      } catch (error) { if (error.name !== 'AbortError') K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#btnForgetLocalFolder').addEventListener('click', () => K.localFolder.forget());
+    K.$('#btnShareSession').addEventListener('click', async () => {
+      try { await K.localFolder.shareBackup(); K.toast('Project backup prepared', 'ok'); }
+      catch (error) { if (error.name !== 'AbortError') K.toast(error.message, 'err', 5000); }
+    });
+  },
+
+  renderSession() {
+    const productions = K.production.state.productions || [];
+    const productionSelect = K.$('#selSessionProduction');
+    const shotSelect = K.$('#selSessionShot');
+    if (!productionSelect || !shotSelect) return;
+    productionSelect.innerHTML = productions.length ? '' : '<option value="">No context imported</option>';
+    for (const production of productions) {
+      const option = document.createElement('option'); option.value = production.id; option.textContent = production.name; productionSelect.appendChild(option);
+    }
+    const production = K.production.active();
+    if (production) productionSelect.value = production.id;
+    if (production && !production.shots.some((shot) => shot.shotId === this._selectedShotId)) {
+      this._selectedShotId = K.production.currentContext()?.shotId || production.shots[0]?.shotId || '';
+    }
+    shotSelect.innerHTML = production?.shots.length ? '' : '<option value="">No prepared shots</option>';
+    for (const shot of production?.shots || []) {
+      const option = document.createElement('option'); option.value = shot.shotId; option.textContent = `${shot.scene ? shot.scene + ' / ' : ''}${shot.shotId}${shot.name ? ' — ' + shot.name : ''}`; shotSelect.appendChild(option);
+    }
+    shotSelect.value = this._selectedShotId;
+    const shot = K.production.shot(this._selectedShotId);
+    const context = K.production.currentContext();
+    K.$('#sessionContextCard').innerHTML = context
+      ? `<strong>${this._esc(context.shotId)} · Take ${String(context.take).padStart(2, '0')}</strong><span>${this._esc(context.production)} · ${K.frames.count()} captured frames</span>`
+      : shot
+        ? `<strong>${this._esc(shot.shotId)}${shot.name ? ' · ' + this._esc(shot.name) : ''}</strong><span>Prepared shot · ${shot.plannedFrames || '—'} frames at ${shot.fps} fps</span>`
+        : '<div class="dim small">Import a prepared shot list, then open a take.</div>';
+    K.$('#sessionNotes').value = shot?.notes || '';
+    K.$('#sessionHandover').value = shot?.handover || '';
+    K.$('#inContextUrl').value = production?.contextUrl || production?.sheetRef || '';
+    K.$('#btnOpenSessionTake').disabled = !shot;
+    K.$('#btnSaveSessionNotes').disabled = !shot;
+    const result = K.production.sessionResult();
+    K.$('#sessionResult').textContent = `${result.captures} captures · ${result.exposures} exposures · ${result.duration_s}s`;
+    this.renderLocalFolder();
+  },
+
+  renderLocalFolder() {
+    const card = K.$('#localFolderStatus');
+    if (!card || !K.localFolder) return;
+    const state = K.localFolder.state();
+    card.className = 'storage-card' + (state.connected ? ' connected' : state.permission === 'prompt' ? ' attention' : '');
+    if (state.connected) card.innerHTML = `<strong>${this._esc(state.folderName)} / ${this._esc(state.projectFolder)}</strong><span>New JPEG captures are mirrored here. Browser storage remains the recovery copy.</span>`;
+    else if (!state.supported) card.innerHTML = '<strong>Browser storage + Save to Files</strong><span>This browser does not expose a persistent folder. Use Save / Share backup at the end of the session.</span>';
+    else if (state.permission === 'prompt') card.innerHTML = `<strong>${this._esc(state.folderName)}</strong><span>Reconnect this folder to resume local JPEG copies.</span>`;
+    else card.innerHTML = '<strong>Browser storage</strong><span>Choose a folder for a second local JPEG copy.</span>';
+    K.$('#btnChooseLocalFolder').textContent = state.permission === 'prompt' ? 'Reconnect folder' : 'Choose folder…';
+    K.$('#btnChooseLocalFolder').disabled = !state.supported;
+    K.$('#btnForgetLocalFolder').disabled = !state.folderName;
   },
 
   /* ================= production pane ================= */
@@ -218,6 +393,10 @@ K.ui = {
         isTest: test,
         insert: !test,
       });
+      K.localFolder.writeCapture({ id: meta.id, blob: shot.blob, isTest: test }).catch((error) => {
+        console.warn('Local capture mirror:', error.message);
+        K.toast('Local folder copy failed; the browser copy is safe', 'err', 5000);
+      });
       // fire the real camera shutter & keep RAW originals
       let tetherP = null;
       if (K.tether.armed()) {
@@ -331,6 +510,7 @@ K.ui = {
     else cur = K.viewport.reviewExp + 1;
     K.$('#frameCounter').textContent = `${cur} / ${total}`;
     K.$('#timecode').textContent = K.timecode(playExposure !== null ? playExposure : (cur === total ? total : cur - 1), fps);
+    K.$('#focusCounter').textContent = `${cur} / ${total}`;
     this.redrawWave(playExposure);
   },
 
@@ -383,11 +563,9 @@ K.ui = {
   /* ================= tabs ================= */
   _tabs() {
     K.$$('#sideTabs button').forEach((b) => {
-      b.addEventListener('click', () => {
-        K.$$('#sideTabs button').forEach((x) => x.classList.toggle('active', x === b));
-        K.$$('.pane').forEach((p) => p.classList.toggle('active', p.dataset.pane === b.dataset.tab));
-      });
+      b.addEventListener('click', () => this.activateTab(b.dataset.tab, b.dataset.group));
     });
+    this.activateTab('onion', 'assist', { open: false });
   },
 
   /* ================= camera pane ================= */
@@ -1116,7 +1294,7 @@ K.ui = {
     });
     K.$('#btnProject').addEventListener('click', () => this.openProjectModal());
     K.$('#btnHelp').addEventListener('click', () => this.showModal('helpModal'));
-    K.bus.on('project:renamed', ({ name }) => { K.$('#projectName').textContent = name; });
+    K.bus.on('project:renamed', ({ name }) => { K.$('#projectName').textContent = name; K.$('#focusProject').textContent = name; });
 
     K.$('#selEdit').addEventListener('change', (e) => {
       K.playback.stop();

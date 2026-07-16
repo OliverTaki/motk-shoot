@@ -7,15 +7,20 @@ const manifest = await readFile(new URL('../manifest.json', import.meta.url), 'u
 
 for (const required of [
   '@media (max-width: 720px) and (orientation: portrait)',
-  'grid-template-rows: minmax(210px, 1fr) 188px',
+  'body.panel-open #center',
+  'grid-template-rows: minmax(210px, 1fr) minmax(260px, 44dvh)',
   '#btnCapture::after',
   'content: "CAPTURE"',
   'padding-bottom: env(safe-area-inset-bottom)',
+  'body.focus-mode #viewportWrap',
+  'body.focus-controls-hidden #focusHud',
 ]) assert.match(css, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
 assert.match(html, /phones, tablets and desktops/);
 assert.match(manifest, /phones, tablets and desktops/);
-assert.doesNotMatch(`${css}\n${html}`, /iPhone|Android|userAgent|navigator\.platform/i);
-assert.match(css, /#center \{ display: grid; grid-template-columns: 1fr 292px;/);
+assert.doesNotMatch(`${css}\n${html}`, /userAgent|navigator\.platform/i);
+assert.match(css, /#center \{ display: grid; grid-template-columns: 1fr;/);
+assert.match(html, /id="btnFocus"/);
+assert.match(html, /id="btnFocusHide"/);
 
 console.log('MOTK Shoot mobile layout self-test: PASS');

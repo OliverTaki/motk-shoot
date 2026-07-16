@@ -257,6 +257,9 @@ K.frames = {
       await K.db.put('frames', rec);
     }
     c.w = w; c.h = h; c.thumb = thumb;
+    if (K.localFolder) K.localFolder.writeCapture({ id: captureId, blob, isTest: !!c.isTest, variant: 'camera' }).catch((error) => {
+      console.warn('Local camera JPEG mirror:', error.message);
+    });
     if (this._bitmaps.has(captureId)) { this._bitmaps.get(captureId).close(); this._bitmaps.delete(captureId); }
     this._materialize();
     K.viewport._refreshAsync();
