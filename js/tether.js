@@ -416,15 +416,11 @@ K.tether = {
 
   /* Fire the camera for capture `captureId`. Resolves when files are on disk. */
   async shoot(captureId) {
-    if (!this.connected) return;
+    if (!this.connected) throw new Error('Companion is not connected');
     K.status('Tether: firing camera…');
     try {
       const res = await this._request('tether.shoot', { captureId, context: K.production?.currentContext() }, 45000);
-      K.status('');
-      if (!res.ok) {
-        K.toast('Tether capture failed: ' + (res.error || '?'), 'err', 4000);
-        return;
-      }
+      if (!res.ok) throw new Error(res.error || 'Camera did not complete the capture');
       if (res.files && res.files.length) {
         await K.frames.setRaw(captureId, res.files.join(';'));
       }
@@ -434,21 +430,23 @@ K.tether = {
         for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
         await K.frames.updateCaptureBlob(captureId, new Blob([u8], { type: 'image/jpeg' }));
       }
+      return res;
     } catch (e) {
+      throw new Error('Camera shutter failed: ' + e.message);
+    } finally {
       K.status('');
-      K.toast('Tether: ' + e.message, 'err', 4000);
     }
   },
 
   async shootPasses(captureId, presets = this.passPresets) {
-    if (!this.connected || !presets.length) return;
+    if (!this.connected) throw new Error('Companion is not connected');
+    if (!presets.length) throw new Error('No exposure passes are configured');
     K.status(`Tether: capturing ${presets.length} passes…`);
     try {
       const res = await this._request('tether.shoot.passes', { captureId, passes: presets, context: K.production?.currentContext() }, Math.max(45000, presets.length * 45000));
       if (res.passes?.length) await K.frames.setPasses(captureId, res.passes);
       if (!res.ok) {
-        K.toast('Pass capture failed: ' + (res.error || '?'), 'err', 5000);
-        return res;
+        throw new Error(res.error || 'Camera did not complete every exposure pass');
       }
       const jpeg = res.passes?.find((pass) => pass.jpeg)?.jpeg;
       if (this.useJpeg && jpeg) {
@@ -459,7 +457,7 @@ K.tether = {
       K.toast(`${res.passes.length} exposure passes captured`, 'ok');
       return res;
     } catch (e) {
-      K.toast('Tether passes: ' + e.message, 'err', 5000);
+      throw new Error('Camera exposure passes failed: ' + e.message);
     } finally {
       K.status('');
     }

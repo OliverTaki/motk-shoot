@@ -362,6 +362,17 @@ K.frames = {
     return ids.length;
   },
 
+  /* Remove a capture that never completed (for example, a failed tether shot). */
+  async discardFailedCapture(id) {
+    if (!id) return;
+    for (const edit of this.edits) edit.items = edit.items.filter((item) => item.id !== id);
+    await K.db.del('frames', id).catch(() => {});
+    if (this._bitmaps.has(id)) { this._bitmaps.get(id).close(); this._bitmaps.delete(id); }
+    const index = this.captures.findIndex((capture) => capture.id === id);
+    if (index >= 0) this.captures.splice(index, 1);
+    this._commit('discard-failed');
+  },
+
   size() {
     const f = this.list[0] || this.captures[0];
     return f ? { w: f.w, h: f.h } : null;

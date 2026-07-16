@@ -252,6 +252,12 @@ in **Export → Edit list (CSV)** so you can conform the RAW sequence later in
 DaVinci Resolve / After Effects. Agent-managed originals are copied and never
 modified.
 
+With Companion, these files are visible under **Camera Originals** below the
+FILES root selected in the Control Center. A tethered frame enters the timeline
+only after the camera confirms that its file was written. If the camera reports
+a shutter or storage error, the frame counter stays unchanged and no provisional
+live-view grab is left behind.
+
 ### 4.7 PTP live view (no HDMI dongle)
 
 With the SIGMA, gphoto2, or dummy backend connected, choose **Tether live view (PTP)**

@@ -235,7 +235,8 @@ Camera tab → **Tether — RAW originals** → Connect (`ws://localhost:8793`).
   Test shots retain RAW names, survive backup/restore, and stay out of as-shot
   reconstruction unless explicitly inserted from the bin.
 
-The status line shows the folder where originals land. File names are
+The status line shows the folder where originals land. Companion uses the
+visible `Camera Originals` folder below its selected FILES root. File names are
 `kdr_YYYYMMDD_HHMMSS_nnnn.<ext>`.
 
 ## PTP live view
@@ -256,9 +257,12 @@ UVC/HDMI remains the fallback when a body cannot provide PTP previews fast enoug
 
 ## Notes
 
-- The live-view grab still happens instantly, so the timeline stays snappy
-  even if the camera takes a second to write RAW.
-- If a tether shot fails you get a toast; the frame keeps its live-view image.
+- The live-view grab still happens instantly, but a tethered frame enters the
+  timeline only after the camera reports that its files are on disk.
+- If the physical shutter or disk write fails, MOTK Shoot shows the camera
+  error, removes the provisional browser grab, and does not advance the frame
+  counter. A visible frame therefore means the configured capture transaction
+  completed.
 - Agent options: `--port 8793 --dir ./originals --backend auto|sigma|gphoto2|digicam|dummy`.
 - SIGMA options: `--sigma-sdk-zip <licensed ZIP> [--sigma-serial SERIAL]`.
 - Localhost and the agent-served Observer are accepted browser origins. For a

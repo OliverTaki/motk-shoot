@@ -73,10 +73,15 @@ Under **Session → Save**:
   **Save / Share backup** to send the session backup to Files, AirDrop, or
   another share destination.
 - The optional Companion can maintain production roots, RAW originals, and
-  vendor-camera files when a normal browser is not allowed to do so.
+  vendor-camera files when a normal browser is not allowed to do so. Camera
+  files are visible under `<FILES root>/Camera Originals`.
 
 Files are never silently overwritten. Disconnecting a folder stops the mirror;
 the browser recovery copy remains.
+
+When the physical shutter is enabled, a browser grab remains provisional until
+Companion confirms the camera file is on disk. Failed shutter or storage writes
+do not advance the frame counter or leave a false frame in the project.
 
 ## Shooting features
 

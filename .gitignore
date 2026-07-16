@@ -3,6 +3,7 @@
 originals/
 productions/
 tmp/
+.tmp-*/
 config/
 state/
 CameraControlSDK*/

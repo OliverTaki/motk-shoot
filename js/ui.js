@@ -403,20 +403,17 @@ K.ui = {
     if (K.playback.playing) K.playback.stop();
     this._capturing = true;
     const bo = this.blackout ? K.$('#blackout') : null;
+    let meta = null;
     try {
       if (bo) {
         bo.classList.remove('hidden');
         await K.sleep(160); // let the panel actually go dark before exposing
       }
       const shot = await K.camera.capture();
-      const meta = await K.frames.add(shot, {
+      meta = await K.frames.add(shot, {
         hold: this.captureHold,
         isTest: test,
-        insert: !test,
-      });
-      K.localFolder.writeCapture({ id: meta.id, blob: shot.blob, isTest: test }).catch((error) => {
-        console.warn('Local capture mirror:', error.message);
-        K.toast('Local folder copy failed; the browser copy is safe', 'err', 5000);
+        insert: false,
       });
       // fire the real camera shutter & keep RAW originals
       let tetherP = null;
@@ -425,8 +422,14 @@ K.ui = {
           ? K.tether.shootPasses(meta.id)
           : K.tether.shoot(meta.id);
       }
-      // stay dark through the real (possibly long) exposure on the camera body
-      if (tetherP && (bo || test)) await tetherP;
+      // A frame is not complete until the real camera reports files on disk.
+      if (tetherP) await tetherP;
+      const completedBlob = await K.frames.getBlob(meta.id) || shot.blob;
+      K.localFolder.writeCapture({ id: meta.id, blob: completedBlob, isTest: test }).catch((error) => {
+        console.warn('Local capture mirror:', error.message);
+        K.toast('Local folder copy failed; the browser copy is safe', 'err', 5000);
+      });
+      if (!test) K.frames.insertCapture(meta.id);
       if (!bo) {
         const flash = K.$('#captureFlash');
         flash.classList.add('on');
@@ -448,6 +451,7 @@ K.ui = {
       return meta;
     } catch (e) {
       console.error(e);
+      if (meta) await K.frames.discardFailedCapture(meta.id);
       K.toast('Capture failed: ' + e.message, 'err');
     } finally {
       if (bo) bo.classList.add('hidden');
