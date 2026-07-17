@@ -293,7 +293,13 @@ if (BACKEND === 'auto') {
   }
   }
 } else if (BACKEND === 'sigma') {
-  sigmaProbeCache = await runSigma('probe');
+  // Camera optional at startup: keep serving when the body is off/unplugged.
+  try {
+    sigmaProbeCache = await runSigma('probe');
+  } catch (error) {
+    console.warn('[agent] SIGMA camera not detected at startup (' + error.message + '); continuing without it.');
+    sigmaProbeCache = null;
+  }
   allowedConfigPaths = new Set(sigmaConfigs.keys());
 }
 console.log(`[agent] backend=${BACKEND}  dir=${DIR}  productionRoot=${PRODUCTION_ROOT}`);
