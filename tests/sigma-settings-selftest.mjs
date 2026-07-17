@@ -20,7 +20,7 @@ assert.match(agent, /runSigma\('preview', \['-Output', target, \.\.\.sigmaOverri
 assert.doesNotMatch(agent, /\[\[1, 'Camera card'\]/, 'MOTK captures must always create a computer original');
 assert.match(helper, /ConfigureStillCapture\(ref info, imageQuality, exposureMode, shutterCode, apertureCode, isoAuto, isoCode, whiteBalanceCode, colorModeCode\)/);
 assert.match(helper, /Camera does not expose aperture control\. Put the lens aperture ring in Auto\/A\./);
-assert.match(helper, /ValidateCapturedFile\(target, fileBytes\)/);
+assert.match(helper, /NormalizeCapturedFile\(target, stream\.ToArray\(\)\)/);
 assert.match(tether, /selectedConfigs: \{\}/);
 assert.match(tether, /await this\._restoreSelectedConfigs\(\)/);
 assert.match(tether, /this\.selectedConfigs\[path\] = res\.config\?\.current \|\| value/);
