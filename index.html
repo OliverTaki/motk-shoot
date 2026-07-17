@@ -151,9 +151,11 @@
           <div class="dim small">The key stays only in this browser tab. It is not saved in the project or Agent URL.</div>
           <div class="btnrow">
             <button id="btnTether" class="btn">Connect</button>
+            <a id="btnStartCompanion" class="btn" href="motk-companion://start" title="Starts the installed MOTK Companion on this PC">Start Companion</a>
             <button id="btnForgetTetherToken" class="btn" type="button">Forget key</button>
             <span id="tetherStatus" class="badge dim">offline</span>
           </div>
+          <div class="dim small">Start Companion opens the installed Control Center on this PC (browsers ask once for permission). Install it from the MOTK site if the link does nothing.</div>
           <label class="row chk"><input type="checkbox" id="chkTetherTrigger" checked><span>Fire camera shutter on capture</span></label>
           <label class="row chk"><input type="checkbox" id="chkTetherJpeg" checked><span>Use camera JPEG as frame image</span></label>
           <div id="tetherInfo" class="dim small"></div>
