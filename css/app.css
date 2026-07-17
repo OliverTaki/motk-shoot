@@ -631,3 +631,12 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
   #xsheetTable input { color: #000; border: 0; }
   #toasts { display: none !important; }
 }
+
+/* Dragonframe-style exposure quick strip (tether-connected only) */
+#cameraQuick{display:flex;gap:10px;align-items:center;justify-content:center;padding:4px 8px;
+ background:rgba(20,24,30,.92);border-top:1px solid #2a3140;flex-wrap:wrap}
+#cameraQuick.hidden{display:none}
+.camQuickItem{display:flex;gap:5px;align-items:center;font-size:11.5px;color:#9fb0c8}
+.camQuickItem span{font-weight:700;letter-spacing:.04em}
+.camQuickItem select{background:#10151d;color:#e8eef7;border:1px solid #33405a;border-radius:6px;
+ padding:2px 6px;font-size:12px;max-width:130px}

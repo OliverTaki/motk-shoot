@@ -139,13 +139,28 @@ K.tether = {
         const p = this._pending.get(msg.id);
         if (p) { this._pending.delete(msg.id); p.resolve(msg); }
       } else if (msg.type === 'tether.liveview.frame') {
+        if (msg.configWarning) {
+          K.toast('Camera rejected a setting and kept its own values: ' + msg.configWarning, 'err', 7000);
+          this.refreshConfigs().catch(() => {});
+        }
         this._consumeLiveFrame(msg);
       } else if (msg.type === 'tether.liveview.error') {
         this.liveViewActive = false;
         if (this._liveWaiter) this._liveWaiter.reject(new Error(msg.error || 'live view failed'));
         this._liveWaiter = null;
-        if (K.camera) K.camera.tetherStopped();
-        K.toast('Tether live view: ' + (msg.error || 'stopped'), 'err', 5000);
+        // Try to recover before giving up: the camera may have dozed off or the
+        // USB session hiccupped. Three spaced retries, then stop cleanly.
+        this._liveRetries = (this._liveRetries || 0) + 1;
+        if (this.connected && this._liveRetries <= 3) {
+          K.toast('Live view interrupted (' + (msg.error || 'camera') + ') - reconnecting ' + this._liveRetries + '/3…', 'err', 4000);
+          setTimeout(() => {
+            if (!this.connected || this.liveViewActive) return;
+            this.startLiveView().then(() => { this._liveRetries = 0; K.toast('Live view recovered', 'ok'); }).catch(() => {});
+          }, 2500 * this._liveRetries);
+        } else {
+          if (K.camera) K.camera.tetherStopped();
+          K.toast('Tether live view: ' + (msg.error || 'stopped'), 'err', 5000);
+        }
       }
     };
   },
@@ -174,6 +189,11 @@ K.tether = {
 
   async startLiveView(fps = 10) {
     if (!this.connected) throw new Error('Connect the tether agent first');
+    // Keep the screen awake while shooting over tether; a sleeping display can
+    // suspend the tab and end the session mid-animation.
+    if (navigator.wakeLock && !this._wakeLock) {
+      navigator.wakeLock.request('screen').then((lock) => { this._wakeLock = lock; }).catch(() => {});
+    }
     this.liveViewActive = true;
     this.liveViewSeq = 0;
     const firstFrame = new Promise((resolve, reject) => {
@@ -202,6 +222,8 @@ K.tether = {
   },
 
   async stopLiveView() {
+    if (this._wakeLock) { try { this._wakeLock.release(); } catch {} this._wakeLock = null; }
+    this._liveRetries = 0;
     const wasActive = this.liveViewActive;
     this.liveViewActive = false;
     this._queuedFrame = null;
@@ -345,7 +367,39 @@ K.tether = {
     return errors;
   },
 
+  // Dragonframe-style exposure strip: shutter / aperture / ISO / WB live on the
+  // shooting surface, one click away, while full settings stay in CAMERA setup.
+  _quickPaths: ['/sigma/exposure/shutter', '/sigma/exposure/aperture', '/sigma/exposure/iso', '/sigma/image/white-balance'],
+  _renderQuickStrip() {
+    const strip = K.$('#cameraQuick');
+    if (!strip) return;
+    strip.innerHTML = '';
+    if (!this.connected || !this.configs.length) { strip.classList.add('hidden'); return; }
+    const picks = this.configs.filter((config) => this._quickPaths.includes(config.path));
+    if (!picks.length) { strip.classList.add('hidden'); return; }
+    strip.classList.remove('hidden');
+    for (const config of picks) {
+      const wrap = document.createElement('label');
+      wrap.className = 'camQuickItem';
+      wrap.title = config.label;
+      const tag = document.createElement('span');
+      tag.textContent = { shutter: 'SS', aperture: 'F', iso: 'ISO', 'white-balance': 'WB' }[config.path.split('/').pop()] || config.label;
+      const select = document.createElement('select');
+      for (const value of (config.choices && config.choices.length ? config.choices : [config.current])) {
+        const option = document.createElement('option');
+        option.value = value; option.textContent = value;
+        select.appendChild(option);
+      }
+      select.value = config.current;
+      select.disabled = !!config.readonly;
+      select.addEventListener('change', () => this.setConfig(config.path, select.value, select));
+      wrap.append(tag, select);
+      strip.appendChild(wrap);
+    }
+  },
+
   _renderConfigs() {
+    this._renderQuickStrip();
     const box = K.$('#tetherConfigs');
     if (!box) return;
     box.innerHTML = '';
