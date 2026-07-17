@@ -1,5 +1,5 @@
 /* MOTK Shoot — tiny offline cache */
-const CACHE = 'motkshoot-v19';
+const CACHE = 'motkshoot-v20';
 const ASSETS = [
   './', 'index.html', 'monitor.html', 'css/app.css', 'css/monitor.css', 'manifest.json',
   'js/util.js', 'js/db.js', 'js/local-folder.js', 'js/camera.js', 'js/frames.js', 'js/viewport.js',
