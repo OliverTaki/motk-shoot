@@ -34,11 +34,22 @@ K.tether = {
   _pending: new Map(),
   _seq: 0,
   _connectTimer: null,
+  launchConnect: false,
+  launchAgent: '',
 
   armed() { return this.connected && this.trigger; },
 
   restorePairingToken() {
-    try { this.token = sessionStorage.getItem('motkshoot.companionPairingKey') || ''; } catch { this.token = ''; }
+    let launchedToken = '';
+    try {
+      const launch = new URLSearchParams(location.hash.replace(/^#/, ''));
+      launchedToken = launch.get('pair') || '';
+      this.launchAgent = launch.get('agent') || '';
+      this.launchConnect = !!launchedToken;
+      if (launchedToken) history.replaceState(null, '', location.pathname + location.search);
+    } catch { /* Normal navigation has no launch pairing fragment. */ }
+    try { this.token = launchedToken || sessionStorage.getItem('motkshoot.companionPairingKey') || ''; } catch { this.token = launchedToken; }
+    if (launchedToken) this.setPairingToken(launchedToken);
     return this.token;
   },
 

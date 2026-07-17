@@ -27,6 +27,13 @@
   K.shortcuts.init();
   K.ui.applyProjectSettings();
 
+  // The Windows Companion launcher passes the key in a URL fragment. Fragments
+  // are not sent to the web server; tether.restorePairingToken removes it from
+  // browser history immediately and keeps it only for this tab.
+  if (K.tether.launchConnect) {
+    K.tether.connect(K.tether.launchAgent || 'ws://127.0.0.1:8793', K.tether.token);
+  }
+
   // populate device list (labels appear after permission is granted)
   try { await K.ui.refreshDeviceList(); } catch {}
 
