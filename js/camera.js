@@ -45,14 +45,22 @@ K.camera = {
   },
 
   async start(deviceId, resPreset) {
+    const leavingTether = this.source === 'tether';
     this.stop();
+    // Switching away from tether must fully stop the stream before the webcam
+    // opens, or late tether frames stomp the new source.
+    if (leavingTether && K.tether) { try { await K.tether.stopLiveView(); } catch {} }
     if (deviceId === '__tether__') {
-      if (!K.tether.connected) throw new Error('Connect the tether agent first');
+      if (!K.tether.connected) {
+        const ok = K.tether.ensureCompanion ? await K.tether.ensureCompanion() : false;
+        if (!ok) throw new Error('Companion is not running or not paired - open the CAMERA panel to connect');
+      }
       this.source = 'tether';
       await K.tether.startLiveView();
       return;
     }
     this.source = 'media';
+    this._lastMediaId = deviceId || this._lastMediaId || '';
     const [w, h] = (resPreset || '1920x1080').split('x').map(Number);
     const constraints = {
       audio: false,

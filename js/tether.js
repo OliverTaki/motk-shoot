@@ -139,6 +139,7 @@ K.tether = {
         const p = this._pending.get(msg.id);
         if (p) { this._pending.delete(msg.id); p.resolve(msg); }
       } else if (msg.type === 'tether.liveview.frame') {
+        if (K.camera && K.camera.source !== 'tether') return;
         if (msg.configWarning) {
           K.toast('Camera rejected a setting and kept its own values: ' + msg.configWarning, 'err', 7000);
           this.refreshConfigs().catch(() => {});
@@ -151,7 +152,7 @@ K.tether = {
         // Try to recover before giving up: the camera may have dozed off or the
         // USB session hiccupped. Three spaced retries, then stop cleanly.
         this._liveRetries = (this._liveRetries || 0) + 1;
-        if (this.connected && this._liveRetries <= 3) {
+        if (this.connected && this._liveRetries <= 3 && K.camera && K.camera.source === 'tether') {
           K.toast('Live view interrupted (' + (msg.error || 'camera') + ') - reconnecting ' + this._liveRetries + '/3…', 'err', 4000);
           setTimeout(() => {
             if (!this.connected || this.liveViewActive) return;
@@ -367,6 +368,26 @@ K.tether = {
     return errors;
   },
 
+  // Selecting the tether source auto-starts the installed Companion via the
+  // motk-companion:// scheme and polls for the connection.
+  async ensureCompanion() {
+    if (this.connected) return true;
+    try {
+      const frame = document.createElement('iframe');
+      frame.style.display = 'none';
+      frame.src = 'motk-companion://start';
+      document.body.appendChild(frame);
+      setTimeout(() => frame.remove(), 4000);
+    } catch { /* protocol not registered; the connect loop below still applies */ }
+    K.toast('Starting Companion…', 'ok', 3000);
+    for (let i = 0; i < 8; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (!this.connected && !this.connecting) { try { await this.connect(); } catch {} }
+      if (this.connected) return true;
+    }
+    return false;
+  },
+
   // Dragonframe-style exposure strip: shutter / aperture / ISO / WB live on the
   // shooting surface, one click away, while full settings stay in CAMERA setup.
   _quickPaths: ['/sigma/exposure/shutter', '/sigma/exposure/aperture', '/sigma/exposure/iso', '/sigma/image/white-balance'],
@@ -396,6 +417,24 @@ K.tether = {
       wrap.append(tag, select);
       strip.appendChild(wrap);
     }
+    const gear = document.createElement('button');
+    gear.type = 'button';
+    gear.className = 'camQuickBtn';
+    gear.textContent = '⚙ Camera';
+    gear.title = 'All camera and Companion settings';
+    gear.addEventListener('click', () => document.querySelector('button[data-tab="camera"][data-group="settings"]')?.click());
+    strip.appendChild(gear);
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'camQuickBtn';
+    const onTether = K.camera && K.camera.source === 'tether';
+    toggle.textContent = onTether ? '⇄ Webcam' : '⇄ Tether';
+    toggle.title = onTether ? 'Switch to the webcam without disconnecting Companion' : 'Switch the live source back to the tethered camera';
+    toggle.addEventListener('click', () => {
+      const target = (K.camera && K.camera.source === 'tether') ? (K.camera._lastMediaId || undefined) : '__tether__';
+      K.ui.startCameraFrom(target, null).then(() => this._renderQuickStrip()).catch((error) => K.toast(error.message, 'err'));
+    });
+    strip.appendChild(toggle);
   },
 
   _renderConfigs() {
