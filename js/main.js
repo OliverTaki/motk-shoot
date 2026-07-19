@@ -21,6 +21,7 @@
   await K.production.init();
   await K.project.init();
   await K.localFolder.init();
+  await K.aeRoundtrip.init();
   K.timeline.init();
   K.xsheet.init();
   K.ui.init();

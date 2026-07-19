@@ -412,6 +412,28 @@
 
         <!-- EXPORT -->
         <section data-pane="export" class="pane">
+          <h3>After Effects round-trip</h3>
+          <div class="ae-flow" aria-label="After Effects hand-off">
+            <section class="ae-step">
+              <span class="ae-step-no">1</span><strong>Prepare</strong>
+              <div class="btnrow"><button id="btnAePrevis" class="btn">+ Previs</button><button id="btnAeFolder" class="btn">Choose shared folder</button></div>
+              <label class="row"><span>Planned length</span><input id="inAePlannedFrames" type="number" min="1" max="99999" value="120"><span class="dim small">frames</span></label>
+              <label class="row chk"><input id="chkAeInitialFrames" type="checkbox" checked><span>Include captures already shot</span></label>
+              <button id="btnAeInitial" class="btn accent">Create AE project package</button>
+            </section>
+            <section class="ae-step">
+              <span class="ae-step-no">2</span><strong>Send layer</strong>
+              <label class="stack"><span>Layer name</span><input id="inAeLayerName" type="text" value="Stop-motion layer" placeholder="Foreground / Character / FX plate"></label>
+              <button id="btnAeDelivery" class="btn accent">Publish current take</button>
+            </section>
+            <section class="ae-step">
+              <span class="ae-step-no">3</span><strong>Return</strong>
+              <div class="btnrow"><button id="btnAeWatch" class="btn">Watch returns</button><button id="btnAeReturn" class="btn">Import preview…</button></div>
+            </section>
+          </div>
+          <div id="aeRoundtripStatus" class="storage-card"><strong>0 previs · 0 frames</strong><span>ZIP download</span></div>
+          <p class="dim small">Start before shooting with previs, or start from an existing take. AE projects and source media are never replaced. Returned comps appear as reference layers only.</p>
+
           <h3>Movie</h3>
           <label class="row"><span>Format</span><select id="selVidMime"></select></label>
           <label class="row"><span>Bitrate</span>
@@ -667,6 +689,8 @@
 <input type="file" id="fileLayerImg" accept="image/*" class="hidden">
 <input type="file" id="fileLayerVideo" accept="video/*" class="hidden">
 <input type="file" id="fileContext" accept=".csv,.json,text/csv,application/json" class="hidden">
+<input type="file" id="fileAePrevis" accept="image/*,video/*" multiple class="hidden">
+<input type="file" id="fileAeReturn" accept="image/*,video/*" class="hidden">
 
 <script src="js/util.js"></script>
 <script src="js/db.js"></script>
@@ -681,6 +705,7 @@
 <script src="js/xsheet.js"></script>
 <script src="js/export.js"></script>
 <script src="js/editorial.js"></script>
+<script src="js/ae-roundtrip.js"></script>
 <script src="js/project.js"></script>
 <script src="js/production.js"></script>
 <script src="js/cinematography.js"></script>

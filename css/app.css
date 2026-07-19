@@ -505,6 +505,23 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
 ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 5px; border: 2px solid var(--bg2); }
 ::-webkit-scrollbar-track { background: transparent; }
 
+/* AE hand-off stays a compact three-step session tool, not a second editor. */
+.ae-flow { display: grid; gap: 8px; margin: 8px 0; }
+.ae-step {
+  position: relative; display: grid; gap: 7px; padding: 10px 10px 10px 42px;
+  border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--bg3) 72%, transparent);
+}
+.ae-step > strong { line-height: 24px; }
+.ae-step-no {
+  position: absolute; left: 10px; top: 10px; display: grid; place-items: center;
+  width: 23px; height: 23px; border-radius: 50%; background: var(--accent); color: #fff;
+  font: 800 11px/1 ui-monospace, monospace;
+}
+.ae-step .btnrow { margin: 0; }
+.ae-step .btn { min-height: 34px; }
+.ae-step input[type="number"] { width: 76px; }
+#aeRoundtripStatus { margin-top: 8px; }
+
 /* ---------- phone layout ----------
    Same app and project data; only the controls are rearranged for touch. */
 @media (max-width: 720px) and (orientation: portrait) {

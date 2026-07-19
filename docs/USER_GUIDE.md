@@ -25,8 +25,9 @@ through camera-room work: set up, shoot, check the take, and hand off the result
 12. [Playback and take check](#12-playback-and-take-check)
 13. [Shot context and session notes](#13-shot-context-and-session-notes)
 14. [Local copies and hand‑off](#14-local-copies-and-hand-off)
-15. [Keyboard shortcuts](#15-keyboard-shortcuts)
-16. [Troubleshooting](#16-troubleshooting)
+15. [After Effects round-trip](#15-after-effects-round-trip)
+16. [Keyboard shortcuts](#16-keyboard-shortcuts)
+17. [Troubleshooting](#17-troubleshooting)
 
 ---
 
@@ -470,7 +471,35 @@ not in the normal camera-room interface.
 
 ---
 
-## 15. Keyboard shortcuts
+## 15. After Effects round-trip
+
+Open **Session → Save** and use the three numbered cards.
+
+1. **Prepare:** add a previs image/movie if available, set the planned frame
+   length, and create the AE project package. This works before the first frame
+   is photographed. Choose a shared/NAS folder for live exchange, or leave it
+   unselected to download a ZIP.
+2. **Send layer:** after photographing a character/pass, enter its human name
+   and publish the current take. This creates the next immutable
+   `delivery_####`; it does not rebuild the `.aep`.
+3. **Return:** the compositor renders a preview and runs the supplied
+   `PUBLISH_RETURN.jsx`. **Watch returns** loads each completed version from the
+   shared folder, while **Import preview…** accepts a manually transferred file.
+
+On the Mac, use **File → Scripts → Run Script File…** in After Effects. Run
+`BUILD_MOTK_AE_PROJECT.jsx` once for a MOTK-created project, then run each
+delivery's `IMPORT_MOTK_DELIVERY.jsx` in the existing project. If you already
+made a previs `.aep` independently, save it, make the receiving comp active,
+and run the delivery importer directly.
+
+Returned comps appear Behind the live image as guide layers. A newer return
+hides the previous one but does not delete it. Returns never enter the capture
+bin or alter camera originals. See
+[the full AE round-trip contract](AFTER_EFFECTS_ROUNDTRIP.md).
+
+---
+
+## 16. Keyboard shortcuts
 
 | Key | Action | Key | Action |
 |---|---|---|---|
@@ -487,7 +516,7 @@ not in the normal camera-room interface.
 
 ---
 
-## 16. Troubleshooting
+## 17. Troubleshooting
 
 **The webcam doesn't show / the screen looks frozen on a frame.**
 MOTK Shoot opens on the live view when a camera is present. If you see a still

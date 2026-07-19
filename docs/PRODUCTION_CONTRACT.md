@@ -106,6 +106,27 @@ MOTK3D places renders under `previz/`; plate-producing tools place source or
 processed plates under `plates/`. Consumers may add subfolders there but must
 not rename the shot folder or overwrite MOTK Shoot take contents.
 
+## After Effects exchange
+
+The optional AE round-trip uses a separately chosen, browser-authorized folder
+so it can be a NAS share or synchronized cross-machine directory without giving
+the browser unrestricted access to the production root:
+
+```text
+<chosen-folder>/MOTK_AE_EXCHANGE/<project-key>/
+  .motk-ae-root
+  initials/initial_####/{handoff.json,media/,scripts/,README.txt,READY}
+  deliveries/delivery_####/{delivery.json,media/,scripts/,README.txt,READY}
+  returns/return_####/{preview.*,return.json,READY}
+  <project-key>_MOTK_WORKING.aep
+```
+
+All version folders are append-only and `READY` is written last. The working
+`.aep` is created once and thereafter belongs to the compositor; incremental
+delivery scripts update that open project without regenerating it. Returned
+media is a Shoot guide/reference and never becomes a captured original. See
+`docs/AFTER_EFFECTS_ROUNDTRIP.md` for the full contract.
+
 ## Naming
 
 The default take project pattern is `{scene}_{shot}_T{take:2}`. `{shot}` removes

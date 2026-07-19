@@ -21,6 +21,7 @@ K.ui = {
     this._reviewPane();
     this._productionPane();
     this._exportPane();
+    this._aeRoundtripPane();
     this._linkPane();
     this._transport();
     this._topbar();
@@ -28,7 +29,8 @@ K.ui = {
     this._dragDrop();
     this._waveform();
 
-    K.bus.on('project:opened', () => { this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); this.renderSession(); });
+    K.bus.on('project:opened', () => { this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); this.renderSession(); this.renderAeRoundtrip(); });
+    K.bus.on('ae:changed', () => this.renderAeRoundtrip());
     K.bus.on('edits:changed', () => { this.refreshEditSelect(); this.renderReviewTargets(); });
     K.bus.on('frames:changed', () => this.updateCounters());
     K.bus.on('mode:changed', () => this.updateModeUI());
@@ -1227,6 +1229,86 @@ K.ui = {
     K.timeline.scrollToEnd();
   },
 
+  /* ================= After Effects round-trip ================= */
+  _aeRoundtripPane() {
+    const previs = K.$('#fileAePrevis');
+    const returned = K.$('#fileAeReturn');
+    K.$('#btnAePrevis').addEventListener('click', () => previs.click());
+    previs.addEventListener('change', async (event) => {
+      for (const file of Array.from(event.target.files || [])) {
+        try { await K.aeRoundtrip.addPrevis(file); }
+        catch (error) { K.toast('Previs import failed: ' + error.message, 'err', 5000); }
+      }
+      event.target.value = '';
+      this.renderLayerList(); this.renderLayerProps(); this.renderAeRoundtrip();
+    });
+    K.$('#btnAeFolder').addEventListener('click', async () => {
+      try {
+        const state = K.aeRoundtrip.state();
+        const name = state.folderName && state.permission !== 'granted'
+          ? await K.aeRoundtrip.reconnect() : await K.aeRoundtrip.chooseFolder();
+        K.toast(`AE exchange: ${name}`, 'ok');
+      } catch (error) { K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#btnAeInitial').addEventListener('click', async () => {
+      try {
+        K.status('Building AE project package…');
+        const pack = await K.aeRoundtrip.buildInitial({ includeCaptured: K.$('#chkAeInitialFrames').checked });
+        const folder = K.aeRoundtrip.state().connected;
+        const destination = await K.aeRoundtrip.publish(pack, { folder });
+        K.toast(folder ? `AE project package written to ${destination}` : 'AE project package downloaded', 'ok', 5000);
+      } catch (error) { K.toast('AE package failed: ' + error.message, 'err', 6000); }
+      finally { K.status(''); }
+    });
+    K.$('#btnAeDelivery').addEventListener('click', async () => {
+      try {
+        K.status('Building AE layer delivery…');
+        const pack = await K.aeRoundtrip.buildDelivery(K.$('#inAeLayerName').value);
+        const folder = K.aeRoundtrip.state().connected;
+        const destination = await K.aeRoundtrip.publish(pack, { folder });
+        K.toast(folder ? `Layer delivery written to ${destination}` : 'Layer delivery downloaded', 'ok', 5000);
+      } catch (error) { K.toast('AE delivery failed: ' + error.message, 'err', 6000); }
+      finally { K.status(''); }
+    });
+    K.$('#btnAeReturn').addEventListener('click', () => returned.click());
+    returned.addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        try { await K.aeRoundtrip.attachReturn(file); K.toast('AE return loaded behind the live view', 'ok'); }
+        catch (error) { K.toast('AE return failed: ' + error.message, 'err', 5000); }
+      }
+      event.target.value = '';
+      this.renderLayerList(); this.renderLayerProps(); this.renderAeRoundtrip();
+    });
+    K.$('#btnAeWatch').addEventListener('click', async () => {
+      try {
+        const state = K.aeRoundtrip.state();
+        if (!state.connected) await K.aeRoundtrip.reconnect();
+        if (K.aeRoundtrip.state().watching) K.aeRoundtrip.stopWatching(); else K.aeRoundtrip.startWatching();
+      } catch (error) { K.toast(error.message, 'err', 5000); }
+    });
+    K.$('#inAePlannedFrames').addEventListener('change', () => {
+      const state = K.aeRoundtrip._state();
+      state.plannedFrames = K.clamp(parseInt(K.$('#inAePlannedFrames').value, 10) || 120, 1, 99999);
+      K.project.saveSoon();
+    });
+    this.renderAeRoundtrip();
+  },
+
+  renderAeRoundtrip() {
+    const box = K.$('#aeRoundtripStatus');
+    if (!box || !K.project.current || !K.aeRoundtrip) return;
+    const state = K.aeRoundtrip.state();
+    const projectState = K.aeRoundtrip._state();
+    K.$('#inAePlannedFrames').value = projectState.plannedFrames || 120;
+    K.$('#btnAeFolder').textContent = state.connected ? 'Change folder' : (state.folderName ? 'Reconnect folder' : 'Choose shared folder');
+    K.$('#btnAeWatch').textContent = state.watching ? 'Stop watching' : 'Watch returns';
+    K.$('#btnAeWatch').classList.toggle('on', state.watching);
+    const location = state.connected ? state.folderName : 'ZIP download';
+    const returned = state.activeReturnId ? ` · Return ${state.activeReturnId}` : '';
+    box.innerHTML = `<strong>${state.previsCount} previs · ${K.frames.count()} frames</strong><span>${location} · AE project ${state.initial} · Deliveries ${state.delivery}${returned}</span>`;
+  },
+
   /* ================= edits (alt versions) ================= */
   refreshEditSelect() {
     const sel = K.$('#selEdit');
@@ -1518,7 +1600,9 @@ K.ui = {
   _persistSettingsNow() {
     const p = K.project.current;
     if (!p) return;
+    const existing = p.settings || {};
     p.settings = {
+      ...existing,
       onion: { ...K.viewport.onion },
       guides: { ...K.viewport.guides },
       captureHold: this.captureHold,

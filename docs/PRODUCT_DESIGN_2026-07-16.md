@@ -16,6 +16,7 @@ tool. It is not the place where a production is designed or a film is edited.
 | Immutable capture bin and browser project recovery | Pipeline automation and post-production orchestration |
 | Imported production/shot/take context | Camera/file automation already owned by Companion |
 | Session notes and capture results | Private MegaProd/MegaTools implementation |
+| Publish a captured pass and load a returned comp as a shooting reference | Compositing, conform, render setup, and post-production project management |
 
 Legacy edit, production and interchange data remain readable so existing
 projects are not orphaned. They are no longer presented as the normal MOTK
@@ -30,7 +31,10 @@ Shoot workflow.
 2. **Assist** opens only when needed and contains shooting aids: onion skin,
    guides, reference layers, monitor tools and audio/X-Sheet cues.
 3. **Session** shows imported production context, the active shot/take, notes,
-   results and safe session export. It does not create a production plan.
+   results and safe session export. Its compact AE hand-off can publish an
+   immutable pass and receive a rendered guide because both actions directly
+   support continuing photography; AE still owns the comp and all post work.
+   Session does not create a production plan or expose compositor controls.
 4. **Settings** contains camera source, resolution, tether/Companion pairing,
    time-lapse, passes, image orientation and external bridge setup.
 5. **Focus mode** makes the viewport the product. Capture and looping Play/Pause are the

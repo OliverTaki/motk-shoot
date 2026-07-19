@@ -64,14 +64,16 @@ K.layers = {
     };
   },
 
-  async addVideo(file) {
+  async addVideo(file, options = {}) {
     const assetId = 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     await K.db.put('assets', { id: assetId, projectId: K.project.current.id, blob: file });
     const video = await this._loadVideo(assetId);
-    const l = this._base('video', file.name.replace(/\.[^.]+$/, ''));
-    l.assetId = assetId; l.opacity = 0.5;
+    const l = this._base('video', options.name || file.name.replace(/\.[^.]+$/, ''));
+    l.assetId = assetId; l.opacity = options.opacity ?? 0.5;
+    Object.assign(l, options, { assetId, type: 'video' });
     if (video?.videoWidth) { l.w = video.videoWidth; l.h = video.videoHeight; }
     this.list.push(l); this.select(l.id); this._save();
+    return l;
   },
 
   addText() {
@@ -93,17 +95,19 @@ K.layers = {
     K.viewport.invalidate();
   },
 
-  async addImage(file) {
+  async addImage(file, options = {}) {
     const assetId = 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     await K.db.put('assets', { id: assetId, projectId: K.project.current.id, blob: file });
     const bmp = await this._loadImage(assetId);
-    const l = this._base('image', file.name.replace(/\.\w+$/, ''));
+    const l = this._base('image', options.name || file.name.replace(/\.\w+$/, ''));
     l.assetId = assetId;
-    l.opacity = 0.5;
+    l.opacity = options.opacity ?? 0.5;
+    Object.assign(l, options, { assetId, type: 'image' });
     if (bmp) { l.w = bmp.width; l.h = bmp.height; }
     this.list.push(l);
     this.select(l.id);
     this._save();
+    return l;
   },
 
   addShape(type) {

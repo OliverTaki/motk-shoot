@@ -21,6 +21,9 @@ MOTK Shoot is deliberately centred on the work done beside the set:
 - record shooting notes, handover notes, and a session result;
 - keep browser recovery storage, mirror JPEGs to a chosen local folder on
   compatible desktop browsers, or share/save a session backup on iPhone/iPad;
+- start an After Effects project from previs before photography, publish each
+  photographed pass as a versioned delivery, and load returned comps as
+  non-destructive shooting references;
 - use **Focus mode** for a clean full-screen camera view with Capture and
   Play/Pause, then hide even those controls with one tap.
 
@@ -78,6 +81,14 @@ Under **Session → Save**:
 
 Files are never silently overwritten. Disconnecting a folder stops the mirror;
 the browser recovery copy remains.
+
+The same Save panel contains a compact **After Effects round-trip**. It supports
+previs-first, photography-first, and an independently prepared AE project. A
+chosen shared/NAS folder enables versioned `initial_####`, `delivery_####`, and
+`return_####` exchange; ZIP plus manual return import works without persistent
+folder access. The compositor-owned `.aep`, source stills, RAW originals, and
+older returns are never replaced. See
+[After Effects round-trip](docs/AFTER_EFFECTS_ROUNDTRIP.md).
 
 When the physical shutter is enabled, a browser grab remains provisional until
 Companion confirms the camera file is on disk. Failed shutter or storage writes
