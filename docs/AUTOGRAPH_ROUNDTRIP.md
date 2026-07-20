@@ -57,6 +57,11 @@ capture stills plus one previs reference, showed all four 640x360 media items in
 the Project Panel, saved a disposable `.agp`, and completed **File > Collect
 Files in Project** with the copy option. The collected folder contains the
 project plus all four files under `Resources/`, and the collected project was
-saved from Autograph. Composition authoring, an Autograph render, and publishing
-that render through `PUBLISH_RETURN.py` remain unobserved application steps;
-MOTK still does not claim automatic `.agp` or layer-stack generation.
+saved from Autograph. A generated capture still was then added as a real
+composition layer and rendered by Autograph as a 1920x1080, 24 fps, 30-second
+Apple ProRes 422 HQ MOV (720 frames). A 640x360 H.264 viewing copy of that
+Autograph render was published through the supplied `PUBLISH_RETURN.py` into
+append-only `return_0001`, with valid `return.json` and `READY` markers. The
+installed-application import, composition, render, collection, and return path
+is therefore observed. MOTK still does not claim automatic `.agp` or arbitrary
+layer-stack generation; composition construction remains compositor-owned.
