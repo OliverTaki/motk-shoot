@@ -520,6 +520,12 @@ body.focus-controls-hidden #focusHud { opacity: 0; pointer-events: none; }
 .ae-step .btnrow { margin: 0; }
 .ae-step .btn { min-height: 34px; }
 .ae-step input[type="number"] { width: 76px; }
+.post-adapters { display: grid; gap: 8px; margin: 8px 0; }
+.post-adapter { border: 1px solid var(--line); border-radius: 8px; background: var(--bg3); padding: 8px 10px; }
+.post-adapter summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; }
+.post-adapter summary span { color: var(--dim); font-size: 12px; }
+.post-adapter[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.post-adapter input[type="number"] { width: 76px; }
 #aeRoundtripStatus { margin-top: 8px; }
 
 /* ---------- phone layout ----------

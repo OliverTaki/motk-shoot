@@ -66,7 +66,7 @@ assert(html.indexOf('js/ae-roundtrip.js') < html.indexOf('js/ui.js'), 'AE module
 assert.match(layersSource, /async addVideo\(file, options = \{\}\)/);
 assert.match(source, /role: 'ae-return'/m, 'returned-media role must be assigned by the AE module contract');
 assert.match(uiSource, /\.\.\.existing/, 'UI persistence must retain independent AE round-trip state');
-assert.match(sw, /motkshoot-v23/);
+assert.match(sw, /motkshoot-v24/);
 assert.match(sw, /js\/ae-roundtrip\.js/);
 
 console.log('MOTK Shoot AE round-trip self-test: PASS');

@@ -90,6 +90,15 @@ folder access. The compositor-owned `.aep`, source stills, RAW originals, and
 older returns are never replaced. See
 [After Effects round-trip](docs/AFTER_EFFECTS_ROUNDTRIP.md).
 
+The same panel includes separately bounded **DaVinci Resolve** and **Maxon
+Autograph** adapters. Resolve packages include FCPXML, OTIO, relative media, and
+a documented-API import helper. Autograph packages include relative materials,
+an import list, a neutral shot template, and—when the user selects one—an
+unchanged studio `.agp` template. Both accept previs-first or photography-first
+work and load returned renders only as guide layers. See
+[Resolve round-trip](docs/RESOLVE_ROUNDTRIP.md) and
+[Autograph round-trip](docs/AUTOGRAPH_ROUNDTRIP.md).
+
 When the physical shutter is enabled, a browser grab remains provisional until
 Companion confirms the camera file is on disk. Failed shutter or storage writes
 do not advance the frame counter or leave a false frame in the project.

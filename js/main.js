@@ -22,6 +22,8 @@
   await K.project.init();
   await K.localFolder.init();
   await K.aeRoundtrip.init();
+  await K.resolveRoundtrip.init();
+  await K.autographRoundtrip.init();
   K.timeline.init();
   K.xsheet.init();
   K.ui.init();

@@ -127,6 +127,26 @@ delivery scripts update that open project without regenerating it. Returned
 media is a Shoot guide/reference and never becomes a captured original. See
 `docs/AFTER_EFFECTS_ROUNDTRIP.md` for the full contract.
 
+## Resolve and Autograph exchange
+
+The Resolve and Autograph adapters use the same browser-authorized,
+append-only exchange rules but separate roots and schemas:
+
+```text
+<chosen-folder>/MOTK_RESOLVE_EXCHANGE/<project-key>/
+  packages/package_####/{resolve-package.json,timeline.fcpxml,timeline.otio,media/,scripts/,README.txt,READY}
+  returns/return_####/{preview.*,return.json,READY}
+<chosen-folder>/MOTK_AUTOGRAPH_EXCHANGE/<project-key>/
+  packages/package_####/{autograph-package.json,import-list.csv,shot-template.json,media/,template/,helpers/,README.txt,READY}
+  returns/return_####/{preview.*,return.json,READY}
+```
+
+Resolve projects and existing timelines remain destination-owned. Autograph
+`.agp` files are never generated or rewritten; a user-selected template may be
+copied byte-for-byte into a package. Both adapters write `READY` last, refuse
+overwrites, use relative paths, and attach returned media only as Shoot guide
+layers. See `docs/RESOLVE_ROUNDTRIP.md` and `docs/AUTOGRAPH_ROUNDTRIP.md`.
+
 ## Naming
 
 The default take project pattern is `{scene}_{shot}_T{take:2}`. `{shot}` removes

@@ -56,6 +56,8 @@ K.project = {
       lapseRamp: { enabled: false, path: '', endValue: '', shots: 24 },
       audio: { enabled: true, scrub: true, volume: 1 },
       aeRoundtrip: { initial: 0, delivery: 0, returns: [], activeReturnId: '', plannedFrames: 120 },
+      resolveRoundtrip: { packages: 0, returns: [], activeReturnId: '', plannedFrames: 120 },
+      autographRoundtrip: { packages: 0, returns: [], activeReturnId: '', plannedFrames: 120 },
     };
   },
 

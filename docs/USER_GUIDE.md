@@ -26,8 +26,9 @@ through camera-room work: set up, shoot, check the take, and hand off the result
 13. [Shot context and session notes](#13-shot-context-and-session-notes)
 14. [Local copies and hand‑off](#14-local-copies-and-hand-off)
 15. [After Effects round-trip](#15-after-effects-round-trip)
-16. [Keyboard shortcuts](#16-keyboard-shortcuts)
-17. [Troubleshooting](#17-troubleshooting)
+16. [Resolve and Autograph adapters](#16-resolve-and-autograph-adapters)
+17. [Keyboard shortcuts](#17-keyboard-shortcuts)
+18. [Troubleshooting](#18-troubleshooting)
 
 ---
 
@@ -499,7 +500,32 @@ bin or alter camera originals. See
 
 ---
 
-## 16. Keyboard shortcuts
+## 16. Resolve and Autograph adapters
+
+Open **Session → Save → Post adapters**. Expand only the destination you need.
+Both adapters work before photography with a planned duration and reference
+layers, or after photography with the current active edit and exact holds.
+
+For **DaVinci Resolve**, create a package and transfer the whole folder or ZIP.
+The recipient opens a destination-owned Resolve project and runs
+`scripts/IMPORT_MOTK_RESOLVE.py` from **Workspace → Scripts**. They can instead
+import `timeline.fcpxml` or `timeline.otio` manually. The helper refuses to
+replace a same-named timeline.
+
+For **Maxon Autograph**, optionally select a studio `.agp` template. MOTK copies
+it unchanged; it does not create or rewrite an Autograph project. The recipient
+connects files from `import-list.csv` with **Ctrl/Cmd+I** and follows
+`shot-template.json`. Before transferring an Autograph project between machines,
+use **Collect Files from Project** with copying enabled.
+
+After rendering, use the supplied return helper and **Watch returns**, or use
+**Import preview…** manually. Returns appear behind live view as guide layers
+and never become captured originals. Full contracts:
+[Resolve](RESOLVE_ROUNDTRIP.md) and [Autograph](AUTOGRAPH_ROUNDTRIP.md).
+
+---
+
+## 17. Keyboard shortcuts
 
 | Key | Action | Key | Action |
 |---|---|---|---|
@@ -516,7 +542,7 @@ bin or alter camera originals. See
 
 ---
 
-## 17. Troubleshooting
+## 18. Troubleshooting
 
 **The webcam doesn't show / the screen looks frozen on a frame.**
 MOTK Shoot opens on the live view when a camera is present. If you see a still

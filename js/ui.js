@@ -7,6 +7,7 @@ K.ui = {
   _lapseState: null,
   _selectedShotId: '',
   _capturing: false,
+  _autographTemplateFile: null,
 
   init() {
     this._shell();
@@ -22,6 +23,7 @@ K.ui = {
     this._productionPane();
     this._exportPane();
     this._aeRoundtripPane();
+    this._postRoundtripPane();
     this._linkPane();
     this._transport();
     this._topbar();
@@ -29,8 +31,10 @@ K.ui = {
     this._dragDrop();
     this._waveform();
 
-    K.bus.on('project:opened', () => { this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); this.renderSession(); this.renderAeRoundtrip(); });
+    K.bus.on('project:opened', () => { this._autographTemplateFile = null; this.applyProjectSettings(); this.refreshEditSelect(); this.renderReviewTargets(); this.renderSession(); this.renderAeRoundtrip(); this.renderPostRoundtrips(); });
     K.bus.on('ae:changed', () => this.renderAeRoundtrip());
+    K.bus.on('resolve:changed', () => this.renderPostRoundtrips());
+    K.bus.on('autograph:changed', () => this.renderPostRoundtrips());
     K.bus.on('edits:changed', () => { this.refreshEditSelect(); this.renderReviewTargets(); });
     K.bus.on('frames:changed', () => this.updateCounters());
     K.bus.on('mode:changed', () => this.updateModeUI());
@@ -1307,6 +1311,74 @@ K.ui = {
     const location = state.connected ? state.folderName : 'ZIP download';
     const returned = state.activeReturnId ? ` · Return ${state.activeReturnId}` : '';
     box.innerHTML = `<strong>${state.previsCount} previs · ${K.frames.count()} frames</strong><span>${location} · AE project ${state.initial} · Deliveries ${state.delivery}${returned}</span>`;
+  },
+
+  /* ================= post-production adapters ================= */
+  _postRoundtripPane() {
+    const bind = ({ api, prefix, include, packageButton, returnButton, returnInput, template = false }) => {
+      K.$(`#btn${prefix}Folder`).addEventListener('click', async () => {
+        try {
+          const state = api.state();
+          const name = state.folderName && state.permission !== 'granted' ? await api.reconnect() : await api.chooseFolder();
+          K.toast(`${api.label} exchange: ${name}`, 'ok');
+        } catch (error) { K.toast(error.message, 'err', 5000); }
+      });
+      K.$(packageButton).addEventListener('click', async () => {
+        try {
+          K.status(`Building ${api.label} package…`);
+          const pack = await api.buildPackage({ includeCaptured: K.$(include).checked, templateFile: template ? this._autographTemplateFile : null });
+          const connected = api.state().connected;
+          const destination = await api.publish(pack, { folder: connected });
+          K.toast(connected ? `${api.label} package written to ${destination}` : `${api.label} package downloaded`, 'ok', 5000);
+        } catch (error) { K.toast(`${api.label} package failed: ${error.message}`, 'err', 6000); }
+        finally { K.status(''); }
+      });
+      K.$(`#btn${prefix}Watch`).addEventListener('click', async () => {
+        try {
+          if (!api.state().connected) await api.reconnect();
+          if (api.state().watching) api.stopWatching(); else api.startWatching();
+        } catch (error) { K.toast(error.message, 'err', 5000); }
+      });
+      const picker = K.$(returnInput);
+      K.$(returnButton).addEventListener('click', () => picker.click());
+      picker.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          try { await api.attachReturn(file); K.toast(`${api.label} return loaded as a guide layer`, 'ok'); }
+          catch (error) { K.toast(`${api.label} return failed: ${error.message}`, 'err', 5000); }
+        }
+        event.target.value = '';
+        this.renderLayerList(); this.renderLayerProps(); this.renderPostRoundtrips();
+      });
+      K.$(`#in${prefix}PlannedFrames`).addEventListener('change', () => {
+        api._state().plannedFrames = K.clamp(parseInt(K.$(`#in${prefix}PlannedFrames`).value, 10) || 120, 1, 99999);
+        K.project.saveSoon();
+      });
+    };
+    bind({ api: K.resolveRoundtrip, prefix: 'Resolve', include: '#chkResolveFrames', packageButton: '#btnResolvePackage', returnButton: '#btnResolveReturn', returnInput: '#fileResolveReturn' });
+    bind({ api: K.autographRoundtrip, prefix: 'Autograph', include: '#chkAutographFrames', packageButton: '#btnAutographPackage', returnButton: '#btnAutographReturn', returnInput: '#fileAutographReturn', template: true });
+    const templateInput = K.$('#fileAutographTemplate');
+    K.$('#btnAutographTemplate').addEventListener('click', () => templateInput.click());
+    templateInput.addEventListener('change', (event) => {
+      this._autographTemplateFile = event.target.files?.[0] || null;
+      K.$('#autographTemplateName').textContent = this._autographTemplateFile?.name || 'No template';
+    });
+    this.renderPostRoundtrips();
+  },
+
+  renderPostRoundtrips() {
+    const render = (api, prefix) => {
+      if (!K.project.current || !api) return;
+      const state = api.state();
+      K.$(`#in${prefix}PlannedFrames`).value = api._state().plannedFrames || 120;
+      K.$(`#btn${prefix}Folder`).textContent = state.connected ? 'Change folder' : (state.folderName ? 'Reconnect folder' : 'Shared folder');
+      K.$(`#btn${prefix}Watch`).textContent = state.watching ? 'Stop watching' : 'Watch returns';
+      K.$(`#btn${prefix}Watch`).classList.toggle('on', state.watching);
+      const returned = state.activeReturnId ? ` · Return ${state.activeReturnId}` : '';
+      K.$(`#${prefix.toLowerCase()}RoundtripStatus`).innerHTML = `<strong>${state.packages} packages</strong><span>${state.connected ? state.folderName : 'ZIP download'}${returned}</span>`;
+    };
+    render(K.resolveRoundtrip, 'Resolve');
+    render(K.autographRoundtrip, 'Autograph');
   },
 
   /* ================= edits (alt versions) ================= */
