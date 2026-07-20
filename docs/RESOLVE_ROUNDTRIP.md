@@ -38,6 +38,12 @@ reference materials, tries FCPXML first and OTIO second, selects the new
 timeline, and saves the current project. It refuses to replace an existing
 timeline with the same package name.
 
+The package itself remains portable and contains only relative media links. At
+import time the helper creates a temporary FCPXML with absolute `file:` URIs
+for the package on the current computer. If FCPXML is rejected, it performs the
+same temporary path resolution for OTIO. The temporary files are deleted after
+the import; the immutable exchange package is not rewritten.
+
 Manual import is also supported: import `timeline.fcpxml` or `timeline.otio`,
 then relink to the package's `media/captures` directory. A previs-first package
 contains blank planned timing plus its reference media; a photography-first
@@ -54,7 +60,10 @@ they never enter the capture bin or replace older returns.
 ## Evidence boundary
 
 Package generation, schema, FCPXML/OTIO parsing, overwrite refusal, and return
-contracts are automated-test covered. The helper targets the Resolve 21 API
-installed on the development Windows machine. A real facility import/relink and
-round-trip remains hardware/application acceptance, so public copy must not
-claim that step until it is observed.
+contracts are automated-test covered. On 2026-07-20, DaVinci Resolve Studio
+21.0.1.11 on Windows imported a generated FCPXML through **Workspace > Scripts**
+after the portable-path fix, linked three 640x360 stills with exact 2/3/1-frame
+holds at 12 fps, rendered a six-frame H.264 MOV, and published an append-only
+`return_0001` with `return.json` and `READY`. FCPXML succeeded, so the OTIO
+fallback and a deliberately forced missing-media relink remain unobserved in
+the real application.

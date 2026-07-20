@@ -51,6 +51,12 @@ does not enter photography or replace an older result.
 ## Evidence boundary
 
 Package generation, supplied-template byte preservation, path safety,
-overwrite refusal, and return contracts are automated-test covered. A real
-Autograph import, Collect Files, render, and return remains application
-acceptance and is not yet claimed as verified.
+overwrite refusal, and return contracts are automated-test covered. On
+2026-07-20, Maxon Autograph 2026.0.2 on Windows imported the generated three
+capture stills plus one previs reference, showed all four 640x360 media items in
+the Project Panel, saved a disposable `.agp`, and completed **File > Collect
+Files in Project** with the copy option. The collected folder contains the
+project plus all four files under `Resources/`, and the collected project was
+saved from Autograph. Composition authoring, an Autograph render, and publishing
+that render through `PUBLISH_RETURN.py` remain unobserved application steps;
+MOTK still does not claim automatic `.agp` or layer-stack generation.
