@@ -31,8 +31,9 @@ Non-negotiable invariants:
 For After Effects work, also read `docs/AFTER_EFFECTS_ROUNDTRIP.md`. The working
 `.aep` belongs to the compositor and is never regenerated after creation.
 Deliveries and returns use monotonically versioned folders with `READY` written
-last. Resolve and Autograph adapters remain out of scope until the AE path has
-real application evidence.
+last. The owner reported the Mac After Effects acceptance pass on 2026-07-20.
+Resolve and Autograph adapters may proceed only as separate, explicitly claimed
+work; do not fold them into the Shoot camera-room surface.
 
 Minimum local checks for an AE change:
 

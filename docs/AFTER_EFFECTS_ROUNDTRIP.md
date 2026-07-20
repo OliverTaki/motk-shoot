@@ -1,8 +1,9 @@
 # After Effects round-trip contract
 
-Status: beta implementation; package/schema tests and browser flow verified.
-Real Adobe After Effects execution is intentionally pending on the owner's Mac,
-because the current Windows test machine does not have After Effects.
+Status: public beta; package/schema tests and browser flow verified. The owner
+reported the requested real Adobe After Effects acceptance test PASS on a Mac
+on 2026-07-20. The current Windows development machine still has no After
+Effects installation and did not independently reproduce that host run.
 
 ## Purpose
 
@@ -144,13 +145,14 @@ sync system that publishes `READY` ahead of the media.
 - return manifest and marker generation;
 - browser UI package download and persisted project counter.
 
-`BLOCKED_EXTERNAL` until the owner's Mac test:
+`VERIFIED_HARDWARE` from the owner's 2026-07-20 Mac acceptance report:
 
-- actual script execution in the installed After Effects version;
-- `.aep` creation, delivery import, and render-return across Windows/Mac shared
-  storage;
-- codec compatibility for the owner's chosen preview format.
+- the requested After Effects round-trip acceptance test completed successfully
+  in the owner's Mac environment.
 
-That external test must not be described as passed merely because the JSX was
-generated successfully. Resolve/FCPXML scripting and Autograph package adapters
-remain deferred until this AE loop has real end-to-end evidence.
+The report did not include the After Effects version, preview codec, or shared
+storage subtype. Those combinations are not separately certified, and future
+compatibility issues must be recorded with their exact environment. The AE gate
+that previously deferred Resolve/FCPXML and Autograph adapter work is satisfied;
+those adapters remain separate future implementations rather than Shoot
+features.
