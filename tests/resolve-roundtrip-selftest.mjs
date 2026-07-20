@@ -40,6 +40,6 @@ assert.match(text('IMPORT_MOTK_RESOLVE.py'), /Refusing to replace existing timel
 assert(!JSON.stringify(pack.manifest).match(/[A-Z]:\\/), 'manifest must contain no absolute Windows path');
 for (const id of ['btnResolveFolder', 'btnResolvePackage', 'btnResolveWatch', 'btnResolveReturn']) assert(html.includes(`id="${id}"`));
 assert(html.indexOf('js/post-adapter.js') < html.indexOf('js/resolve-roundtrip.js'));
-assert.match(sw, /motkshoot-v26/);
+assert.match(sw, /motkshoot-v27/);
 assert.match(sw, /js\/resolve-roundtrip\.js/);
 console.log('MOTK Shoot Resolve round-trip self-test: PASS');

@@ -68,7 +68,7 @@
   K.ui.updateModeUI();
 
   // register service worker for offline use (https / localhost only)
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  if (!window.MOTK_LOCAL_EDITION && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 

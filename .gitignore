@@ -8,3 +8,5 @@ config/
 state/
 CameraControlSDK*/
 CameraControlSDK*.zip
+packaging/dist/
+.playwright-cli/

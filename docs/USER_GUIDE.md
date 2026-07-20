@@ -50,6 +50,20 @@ MOTK Shoot does not require GAS. Only context URLs, Companion/tether, Observer,
 or bridge features you explicitly configure send their documented data over the
 network.
 
+### Windows: focused local app
+
+Download and extract **MOTK Shoot Local**, keep `_internal` beside
+`MOTK Shoot Local.exe`, then double-click the executable. It opens a dedicated
+application window with the same capture, timeline, editing, playback, audio,
+X-Sheet and export core. Production administration, Review, external bridge and
+post-production adapters are not shown in this edition. No account or cloud
+project is required.
+
+The launcher listens only on this computer (`127.0.0.1`) and uses its own Edge
+profile so recovery projects do not mix with ordinary browsing. Browser/UVC
+cameras work directly. Install and pair MOTK Companion only when a vendor SDK,
+camera-owned RAW/JPEG capture, or advanced camera controls are needed.
+
 ---
 
 ## 2. The interface at a glance
@@ -73,6 +87,11 @@ network.
   portrait hides step buttons when space is tight, and less-used controls sit
   in the clearly labelled **•••** modal.
 - **Timeline** — one slot = one *koma* (exposure) at your frame rate.
+
+In **MOTK Shoot Local**, the top bar says **Files** instead of Session. Its first
+screen is **Storage**, followed by **Export**. Shot-list intake, production
+management, Review, bridge and post adapters stay outside this focused app; the
+shooting, editing and playback controls above are unchanged.
 
 On a phone, the same functions are not replaced by a different product. The
 top bar becomes compact, panels open as a lower sheet, capture remains within
@@ -465,6 +484,12 @@ ordinary Files folder and will be erased if site data is cleared.
 
 The chosen mirror never replaces browser storage, and MOTK Shoot never silently
 overwrites an existing file. Disconnecting it only stops future copies.
+
+MOTK Shoot Local keeps a fixed local origin and dedicated profile, so the same
+recovery store is available on the next launch. The normal default still starts
+a clean shoot after the application is closed; previous shoots are opened
+explicitly from **Projects**. Choose **Reopen the last project on this device**
+only when that is the intended workstation behaviour.
 
 Older project backups and export metadata remain readable for compatibility.
 Movie mastering and editorial interchange belong in the post-production tool,

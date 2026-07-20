@@ -8,6 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191d24'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ff5f45' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3.4' fill='%23ff5f45'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
+<script src="js/local-edition.js"></script>
+<link rel="stylesheet" href="css/local-edition.css">
 </head>
 <body>
 <div id="app">
@@ -322,6 +324,7 @@
 
         <!-- SHOOTING SESSION -->
         <section data-pane="session" class="pane session-pane">
+          <div class="local-external">
           <h3>Current shot</h3>
           <div id="sessionContextCard" class="session-card"><div class="dim small">Import a prepared shot list, then open a take.</div></div>
           <label class="row"><span>Production</span><select id="selSessionProduction"></select></label>
@@ -339,6 +342,7 @@
           <label class="stack"><span>Handover</span><textarea id="sessionHandover" rows="3"></textarea></label>
           <div class="btnrow"><button id="btnSaveSessionNotes" class="btn">Save notes</button><button id="btnFinishSession" class="btn accent">Finish session</button></div>
           <div id="sessionResult" class="dim small"></div>
+          </div>
 
           <h3>Local capture folder</h3>
           <p class="dim small">Browser storage always keeps the recovery copy. Compatible desktop browsers can also mirror each new JPEG into a folder you choose. iPhone and iPad use Save to Files at the end of the session.</p>
@@ -412,6 +416,7 @@
 
         <!-- EXPORT -->
         <section data-pane="export" class="pane">
+          <div class="local-external">
           <h3>After Effects round-trip</h3>
           <div class="ae-flow" aria-label="After Effects hand-off">
             <section class="ae-step">
@@ -456,6 +461,7 @@
               <p class="dim small">An existing .agp template is copied unchanged. MOTK never fabricates an Autograph project file.</p>
             </details>
           </div>
+          </div>
 
           <h3>Movie</h3>
           <label class="row"><span>Format</span><select id="selVidMime"></select></label>
@@ -483,6 +489,7 @@
             <button id="btnExportCsv" class="btn" title="Frame → capture → RAW file mapping for conforming in post">Edit list (CSV)</button>
           </div>
 
+          <div class="local-external">
           <h3>Editorial hand-off</h3>
           <p class="dim small">Active edit timing, holds, capture IDs, RAW references, and monitor desqueeze. FCPXML media is relinked to this take's <code>frames/</code> folder.</p>
           <div class="btnrow">
@@ -495,6 +502,7 @@
             <button id="btnWriteEditorial" class="btn accent" title="Requires an open production take and connected production agent">Write package to take</button>
           </div>
           <div id="editorialInfo" class="dim small">Uses the active edit. Binary AAF is represented by portable AAF-lite JSON.</div>
+          </div>
 
           <h3>Edit sequence</h3>
           <div class="btnrow">

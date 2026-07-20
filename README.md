@@ -9,6 +9,10 @@ touch-first shooting layout.
 
 **New here?** Read the [illustrated User Guide](docs/USER_GUIDE.md).
 
+## MOTK Shoot Local
+
+The Windows local edition keeps the full stop-motion shooting loop—capture, TEST, timeline editing, holds, playback, onion skin, guides, layers, audio/X-Sheet, local mirror and export—without showing production administration or post-production hand-off tools. See [docs/LOCAL_EDITION.md](docs/LOCAL_EDITION.md). Build it with `powershell -ExecutionPolicy Bypass -File local-app/build-windows.ps1`.
+
 ## One job: shooting
 
 MOTK Shoot is deliberately centred on the work done beside the set:

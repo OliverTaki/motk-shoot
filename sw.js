@@ -1,8 +1,8 @@
 /* MOTK Shoot — tiny offline cache */
-const CACHE = 'motkshoot-v26';
+const CACHE = 'motkshoot-v27';
 const ASSETS = [
-  './', 'index.html', 'monitor.html', 'css/app.css', 'css/monitor.css', 'manifest.json',
-  'js/util.js', 'js/db.js', 'js/local-folder.js', 'js/camera.js', 'js/frames.js', 'js/viewport.js',
+  './', 'index.html', 'monitor.html', 'css/app.css', 'css/local-edition.css', 'css/monitor.css', 'manifest.json',
+  'js/local-edition.js', 'js/util.js', 'js/db.js', 'js/local-folder.js', 'js/camera.js', 'js/frames.js', 'js/viewport.js',
   'js/layers.js', 'js/audio.js', 'js/playback.js', 'js/timeline.js',
   'js/xsheet.js', 'js/export.js', 'js/editorial.js', 'js/ae-roundtrip.js', 'js/post-adapter.js', 'js/resolve-roundtrip.js', 'js/autograph-roundtrip.js', 'js/project.js', 'js/production.js', 'js/cinematography.js', 'js/faces.js', 'js/review.js', 'js/tether.js',
   'js/bridge.js', 'js/ecosystem.js', 'js/monitor.js', 'js/shortcuts.js', 'js/ui.js', 'js/main.js',
