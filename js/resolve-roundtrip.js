@@ -22,14 +22,15 @@ K.resolveRoundtrip = K.postAdapter.create({
       OTIO_SCHEMA: 'Clip.2', name: event.captureId,
       metadata: { motk: { stableId: event.stableId, rawFiles: event.rawFiles, note: event.note } },
       source_range: this._otioRange(0, event.durationFrames, rate),
-      media_reference: { OTIO_SCHEMA: 'ExternalReference.1', name: event.captureId, target_url: event.media, available_range: this._otioRange(0, Math.max(1, event.durationFrames), rate), metadata: {} },
-      effects: [], markers: [], enabled: true,
+      media_references: { DEFAULT_MEDIA: { OTIO_SCHEMA: 'ExternalReference.1', name: event.captureId, target_url: event.media, available_range: this._otioRange(0, Math.max(1, event.durationFrames), rate), available_image_bounds: null, metadata: {} } },
+      active_media_reference_key: 'DEFAULT_MEDIA',
+      effects: [], markers: [], enabled: true, color: null,
     }));
-    if (!children.length) children.push({ OTIO_SCHEMA: 'Gap.1', name: 'MOTK PREVIS TIMING', source_range: this._otioRange(0, manifest.sequence.durationFrames, rate), effects: [], markers: [], enabled: true, metadata: {} });
+    if (!children.length) children.push({ OTIO_SCHEMA: 'Gap.1', name: 'MOTK PREVIS TIMING', source_range: this._otioRange(0, manifest.sequence.durationFrames, rate), effects: [], markers: [], enabled: true, color: null, metadata: {} });
     return JSON.stringify({
       OTIO_SCHEMA: 'Timeline.1', name: manifest.projectKey,
       global_start_time: this._otioTime(0, rate), metadata: { motk: { schema: manifest.schema, packageId: manifest.id, mode: manifest.sequence.mode } },
-      tracks: { OTIO_SCHEMA: 'Stack.1', name: 'tracks', source_range: null, effects: [], markers: [], enabled: true, metadata: {}, children: [{ OTIO_SCHEMA: 'Track.1', name: 'V1 Photography', kind: 'Video', source_range: null, effects: [], markers: [], enabled: true, metadata: {}, children }] },
+      tracks: { OTIO_SCHEMA: 'Stack.1', name: 'tracks', source_range: null, effects: [], markers: [], enabled: true, color: null, metadata: {}, children: [{ OTIO_SCHEMA: 'Track.1', name: 'V1 Photography', kind: 'Video', source_range: null, effects: [], markers: [], enabled: true, color: null, metadata: {}, children }] },
     }, null, 2) + '\n';
   },
   _importScript() {

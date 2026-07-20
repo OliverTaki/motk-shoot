@@ -27,7 +27,11 @@ const text = (name) => new TextDecoder().decode(pack.files.find((file) => file.n
 assert.match(text('timeline.fcpxml'), /duration="2\/12s"/);
 const otio = JSON.parse(text('timeline.otio'));
 assert.equal(otio.OTIO_SCHEMA, 'Timeline.1');
-assert.equal(otio.tracks.children[0].children[0].media_reference.target_url, 'media/captures/f_001.jpg');
+const otioClip = otio.tracks.children[0].children[0];
+assert.equal(otioClip.OTIO_SCHEMA, 'Clip.2');
+assert.equal(otioClip.active_media_reference_key, 'DEFAULT_MEDIA');
+assert.equal(otioClip.media_references.DEFAULT_MEDIA.target_url, 'media/captures/f_001.jpg');
+assert.equal(otioClip.media_reference, undefined, 'Clip.2 must not use the removed Clip.1 media_reference field');
 assert.match(text('IMPORT_MOTK_RESOLVE.py'), /ImportTimelineFromFile/);
 assert.match(text('IMPORT_MOTK_RESOLVE.py'), /file:\/\/\/MOTK_PACKAGE/);
 assert.match(text('IMPORT_MOTK_RESOLVE.py'), /base\.as_uri\(\)/);
@@ -36,6 +40,6 @@ assert.match(text('IMPORT_MOTK_RESOLVE.py'), /Refusing to replace existing timel
 assert(!JSON.stringify(pack.manifest).match(/[A-Z]:\\/), 'manifest must contain no absolute Windows path');
 for (const id of ['btnResolveFolder', 'btnResolvePackage', 'btnResolveWatch', 'btnResolveReturn']) assert(html.includes(`id="${id}"`));
 assert(html.indexOf('js/post-adapter.js') < html.indexOf('js/resolve-roundtrip.js'));
-assert.match(sw, /motkshoot-v25/);
+assert.match(sw, /motkshoot-v26/);
 assert.match(sw, /js\/resolve-roundtrip\.js/);
 console.log('MOTK Shoot Resolve round-trip self-test: PASS');

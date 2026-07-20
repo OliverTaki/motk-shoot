@@ -509,8 +509,10 @@ layers, or after photography with the current active edit and exact holds.
 For **DaVinci Resolve**, create a package and transfer the whole folder or ZIP.
 The recipient opens a destination-owned Resolve project and runs
 `scripts/IMPORT_MOTK_RESOLVE.py` from **Workspace → Scripts**. They can instead
-import `timeline.fcpxml` or `timeline.otio` manually. The helper refuses to
-replace a same-named timeline.
+import `timeline.fcpxml` manually. The helper refuses to replace a same-named
+timeline. The package also contains standards-valid `timeline.otio` for
+interchange, but Resolve 21's installed still-image importer did not accept it;
+use FCPXML for the verified Resolve workflow.
 
 For **Maxon Autograph**, optionally select a studio `.agp` template. MOTK copies
 it unchanged; it does not create or rewrite an Autograph project. The recipient
