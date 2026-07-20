@@ -43,9 +43,12 @@ MOTK Shoot does **not** contain MEGATOOLS or MegaProd code.
 
 - **Webcam / UVC / HDMI-USB capture:** works directly in the browser.
 - **Phone camera:** open the web app on the phone, allow camera access, then use
-  the always-visible **CAM** button to switch front/back/lens sources without
-  opening the full Settings panel. The touch layout and Focus mode work in
-  portrait and landscape.
+  the always-visible **CAM** button. On iPhone it presents one logical Back and
+  one Front choice; the complete physical-lens list remains under Settings.
+  Safari 18.4 or later can use the device photo pipeline when **Hi-res photo
+  capture** is on (the default when available). The Camera panel reports the
+  actual live resolution, photo capability, and the method used for the last
+  capture instead of silently presenting a live-view frame as a full still.
 - **DSLR / mirrorless RAW and vendor controls:** use the optional local
   Companion/tether agent. See [Tether and camera control](docs/TETHER.md).
 - **SIGMA, Nikon, Canon, and Sony:** support depends on the selected browser

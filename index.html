@@ -118,6 +118,7 @@
           </div>
           <label class="row chk"><input type="checkbox" id="chkPhotoMode">
             <span>Hi-res photo capture <em class="dim">(if camera supports)</em></span></label>
+          <div id="cameraQualityStatus" class="quality-status dim small">Start a camera to see the actual live and still resolution.</div>
           <label class="row chk"><input type="checkbox" id="chkBlackout" checked>
             <span>Blackout screen during capture <em class="dim">(kills monitor spill light)</em></span></label>
           <label class="row"><span>JPEG quality</span>
@@ -649,8 +650,10 @@
     </div>
     <p class="dim small">On phones, camera names appear after permission is allowed. Back cameras usually include “back”, “rear”, or a lens name.</p>
     <label class="stack"><span>Camera</span><select id="selQuickCamera"></select></label>
+    <p class="dim small">iPhone CAM shows one Back and one Front choice. Every physical lens remains available under Settings → Camera.</p>
     <label class="stack"><span>Resolution</span><select id="selQuickRes"><option value="3840x2160">4K (2160p)</option><option value="2560x1440">QHD (1440p)</option><option value="1920x1080" selected>Full HD (1080p)</option><option value="1280x720">HD (720p)</option><option value="640x480">VGA (480p)</option></select></label>
     <div class="quick-state" id="quickCameraState">Camera is stopped.</div>
+    <div class="quality-status" id="quickCameraQuality">Start a camera to see the actual live and still resolution.</div>
     <div class="action-row"><button id="btnQuickCameraStart" class="btn accent">Start selected camera</button><button id="btnQuickCameraStop" class="btn">Stop camera</button></div>
   </div>
 

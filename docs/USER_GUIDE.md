@@ -123,6 +123,22 @@ during capture** (dims the monitor so it doesn't light your set), JPEG quality,
 mirror/rotate, and manual controls (focus, shutter, ISO, white balance) when the
 camera exposes them.
 
+### iPhone camera and saved-still quality
+
+On iPhone, the **CAM** sheet intentionally shows one logical **Back camera**
+and one **Front camera**. This avoids presenting every ultra-wide, telephoto,
+depth, and combined camera endpoint as a separate everyday choice. Open the
+full Settings > Camera list only when you deliberately need a specific physical
+lens.
+
+The quality line distinguishes the live stream from the saved still. With
+Hi-res photo capture and a supported browser, MOTK Shoot asks the device for a
+photo at its reported maximum photo dimensions. If that API is unavailable or
+fails, the line explicitly reports **live-view frame** and its real pixel size.
+Safari added the Image Capture API in version 18.4; older iPhones therefore use
+the live-view fallback. This is a browser capture-path limit, not the iPhone
+sensor's maximum quality.
+
 ### 3.1 Webcam or HDMI‑USB capture (simplest)
 
 1. Plug in a **USB webcam**, or feed a camera's clean **HDMI** output into a

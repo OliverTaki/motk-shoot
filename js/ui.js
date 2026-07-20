@@ -46,6 +46,7 @@ K.ui = {
       K.$('#badgeRes').textContent = `${settings.width}×${settings.height}`;
       this.buildCamControls();
       this.renderQuickCameraState();
+      this.renderCameraQuality();
       this.updateModeUI();
     });
     K.bus.on('camera:stopped', () => {
@@ -53,6 +54,7 @@ K.ui = {
       K.$('#badgeRes').textContent = '';
       K.$('#camControls').innerHTML = '<div class="dim small">Start a camera to see available controls.</div>';
       this.renderQuickCameraState();
+      this.renderCameraQuality();
       this.updateModeUI();
     });
     K.bus.on('audio:loaded', ({ name, duration }) => {
@@ -416,6 +418,7 @@ K.ui = {
         await K.sleep(160); // let the panel actually go dark before exposing
       }
       const shot = await K.camera.capture();
+      this.renderCameraQuality();
       meta = await K.frames.add(shot, {
         hold: this.captureHold,
         isTest: test,
@@ -618,7 +621,7 @@ K.ui = {
     sel.addEventListener('change', () => this.startCamera());
     K.$('#selRes').addEventListener('change', () => { this.startCamera(); this.persistSettings(); });
 
-    K.$('#chkPhotoMode').addEventListener('change', (e) => { K.camera.photoMode = e.target.checked; this.persistSettings(); });
+    K.$('#chkPhotoMode').addEventListener('change', (e) => { K.camera.photoMode = e.target.checked; this.renderCameraQuality(); this.persistSettings(); });
     K.$('#chkBlackout').addEventListener('change', (e) => { this.blackout = e.target.checked; this.persistSettings(); });
     const q = K.$('#inJpegQ');
     q.addEventListener('input', () => {
@@ -754,12 +757,12 @@ K.ui = {
   async refreshDeviceList() {
     const cur = K.camera.settings();
     const devices = await K.camera.listDevices();
-    for (const id of ['#selCamera', '#selQuickCamera']) {
+    for (const [id, sourceDevices] of [['#selCamera', devices], ['#selQuickCamera', K.camera.compactDevices(devices)]]) {
       const sel = K.$(id);
       if (!sel) continue;
       const previous = sel.value;
       sel.innerHTML = '';
-      devices.forEach((d, i) => {
+      sourceDevices.forEach((d, i) => {
         const o = document.createElement('option');
         o.value = d.deviceId;
         o.textContent = d.label || `Camera ${i + 1}`;
@@ -773,6 +776,7 @@ K.ui = {
       if ([...sel.options].some((option) => option.value === wanted)) sel.value = wanted;
     }
     this.renderQuickCameraState();
+    this.renderCameraQuality();
   },
 
   async openQuickCamera() {
@@ -794,6 +798,26 @@ K.ui = {
       state.textContent = `Live: ${option?.textContent || 'camera'} · ${settings.width || '?'} × ${settings.height || '?'}`;
     } else state.textContent = 'Camera is stopped. Captured frames and the current project remain open.';
     if (K.$('#btnQuickCameraStop')) K.$('#btnQuickCameraStop').disabled = !K.camera.running;
+  },
+
+  renderCameraQuality() {
+    const quality = K.camera.photoStatus();
+    let text;
+    if (!K.camera.running) text = 'Start a camera to see the actual live and still resolution.';
+    else if (quality.supported && quality.enabled) {
+      const max = quality.maxPhotoWidth && quality.maxPhotoHeight
+        ? ` up to ${quality.maxPhotoWidth} × ${quality.maxPhotoHeight}` : '';
+      text = `Device photo capture is on${max}. Live view is ${quality.streamWidth} × ${quality.streamHeight}.`;
+    } else {
+      text = `Captures use the ${quality.streamWidth} × ${quality.streamHeight} live-view frame. Turn on Hi-res photo capture for a device still when supported.`;
+    }
+    if (quality.last) {
+      const label = quality.last.method === 'device-photo' ? 'Last capture: device photo' : quality.last.method === 'tether-preview' ? 'Last capture: tether preview' : 'Last capture: live-view frame';
+      text += ` ${label} ${quality.last.width} × ${quality.last.height}.`;
+    }
+    for (const id of ['#cameraQualityStatus', '#quickCameraQuality']) {
+      const node = K.$(id); if (node) node.textContent = text;
+    }
   },
 
   /* build sliders from MediaStreamTrack capabilities */
@@ -1720,7 +1744,7 @@ K.ui = {
     this.blackout = s.blackout !== false;
     K.camera.jpegQuality = s.jpegQuality || 0.92;
     K.camera.mirrorH = !!s.mirrorH; K.camera.mirrorV = !!s.mirrorV; K.camera.rot180 = !!s.rot180;
-    K.camera.photoMode = !!s.photoMode;
+    K.camera.photoMode = s.photoMode !== undefined ? !!s.photoMode : !!window.ImageCapture;
     K.playback.loop = !!s.loop;
     K.tether.selectedConfigs = { ...(s.tetherConfigs || {}) };
     K.tether.passesEnabled = !!s.tetherPasses?.enabled;

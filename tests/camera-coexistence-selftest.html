@@ -32,6 +32,17 @@ document.querySelector('#run').addEventListener('click', async () => {
     const listed = await K.camera.listDevices();
     assert(listed.length === 1 && listed[0].deviceId === 'rgb', 'Face Authentication interface was not filtered');
 
+    const iphone = K.camera.compactDevices([
+      { kind: 'videoinput', label: 'Back Ultra Wide Camera', deviceId: 'ultra' },
+      { kind: 'videoinput', label: 'Back Triple Camera', deviceId: 'rear-logical' },
+      { kind: 'videoinput', label: 'Back Telephoto Camera', deviceId: 'tele' },
+      { kind: 'videoinput', label: 'Front TrueDepth Camera', deviceId: 'front-depth' },
+      { kind: 'videoinput', label: 'Front Camera', deviceId: 'front' },
+    ], { appleMobile: true });
+    assert(iphone.length === 2, 'iPhone quick list was not reduced to logical front/back cameras');
+    assert(iphone[0].deviceId === 'rear-logical' && iphone[0].label === 'Back camera', 'Logical rear camera was not preferred');
+    assert(iphone[1].deviceId === 'front' && iphone[1].label === 'Front camera', 'Normal front camera was not preferred');
+
     let stopped = 0;
     K.camera.source = 'media'; K.camera.running = true;
     K.camera.stream = { getTracks: () => [{ stop: () => { stopped++; } }] };

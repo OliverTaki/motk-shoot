@@ -35,7 +35,7 @@ for (const heading of ['Movie', 'Image sequence', 'Project', 'Edit sequence']) a
 assert.match(exportPane, /class="local-external"/);
 
 assert.match(main, /!window\.MOTK_LOCAL_EDITION && 'serviceWorker' in navigator/);
-assert.match(sw, /motkshoot-v27/);
+assert.match(sw, /motkshoot-v28/);
 assert.match(sw, /js\/local-edition\.js/);
 assert.match(sw, /css\/local-edition\.css/);
 

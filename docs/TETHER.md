@@ -5,6 +5,12 @@ or save RAW. The tether agent fixes that: a tiny Node script that runs next to
 your camera, fires the **real shutter** on every MOTK Shoot capture, and keeps
 the RAW/JPEG originals on disk.
 
+For phone cameras, current Safari can expose `ImageCapture.takePhoto()` and
+MOTK Shoot uses it at the reported maximum photo size when Hi-res photo capture
+is enabled. That is a device still through the browser camera session, not a
+RAW/vendor-control path and not a remote press of Apple's Camera app. The
+quality indicator reports when the browser instead saved a live-view frame.
+
 ```
 [MOTK Shoot (browser)] ←WebSocket→ [camera-agent.mjs] ←USB→ [camera]
         live view grab                  SIGMA SDK / gphoto2 / digiCamControl

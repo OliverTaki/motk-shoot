@@ -184,6 +184,7 @@ body[data-panel-group="settings"] #sideTabs button[data-group="settings"] { disp
 .session-card span, .storage-card span { color: var(--dim); font-size: 11px; }
 .storage-card.connected { border-color: var(--ok); }
 .storage-card.attention { border-color: var(--warn); }
+.quality-status { margin: 7px 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); line-height: 1.45; }
 .shot-add { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .shot-add input:nth-child(3), .shot-add button { grid-column: 1 / -1; }
 .shot-add input { min-width: 0; width: 100%; }
